@@ -1,18 +1,17 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:video_player/video_player.dart';
 
-/// Retention paywall that triggers at the 10-second mark.
-/// Pauses the video, blurs the background, and slides up
-/// a card with a shimmering CTA button.
 class VideoFeedViewRetentionPaywall extends StatefulWidget {
   const VideoFeedViewRetentionPaywall({
     required this.controller,
     super.key,
   });
+
   final VideoPlayerController? controller;
 
   @override
@@ -37,29 +36,20 @@ class _VideoFeedViewRetentionPaywallState
       vsync: this,
       duration: const Duration(milliseconds: 700),
     );
-    _blurAnimation = Tween<double>(
-      begin: 0,
-      end: 12,
-    ).animate(
-      CurvedAnimation(
-        parent: _entryController,
-        curve: Curves.easeOut,
-      ),
+    _blurAnimation = Tween<double>(begin: 0, end: 12).animate(
+      CurvedAnimation(parent: _entryController, curve: Curves.easeOut),
     );
     widget.controller?.addListener(_onTick);
   }
 
   @override
-  void didUpdateWidget(
-    VideoFeedViewRetentionPaywall oldWidget,
-  ) {
+  void didUpdateWidget(VideoFeedViewRetentionPaywall oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller?.removeListener(_onTick);
       _triggered = false;
       _dismissed = false;
-      if (_entryController.isCompleted ||
-          _entryController.isAnimating) {
+      if (_entryController.isCompleted || _entryController.isAnimating) {
         _entryController.reset();
       }
       widget.controller?.addListener(_onTick);
@@ -97,39 +87,40 @@ class _VideoFeedViewRetentionPaywallState
     });
   }
 
+  double _cardSlideCurve(double t) {
+    if (t <= 0) return 1;
+    if (t >= 1) return 0;
+    if (t < 0.55) {
+      final p = t / 0.55;
+      return 1.0 - 1.06 * Curves.easeOut.transform(p);
+    } else if (t < 0.75) {
+      final p = (t - 0.55) / 0.2;
+      return -0.06 + 0.09 * Curves.easeInOut.transform(p);
+    } else {
+      final p = (t - 0.75) / 0.25;
+      return 0.03 - 0.03 * Curves.easeOut.transform(p);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    if (!_triggered || _dismissed) {
-      return const SizedBox.shrink();
-    }
+    if (!_triggered || _dismissed) return const SizedBox.shrink();
 
     return AnimatedBuilder(
       animation: _entryController,
       builder: (context, child) {
         final blur = _blurAnimation.value;
-        // Card slide: map 0→1 to 1→-0.08 (overshoot)
-        // then settle at 0. Using a custom curve.
-        final slideT = _cardSlideCurve(
-          _entryController.value,
-        );
+        final slideT = _cardSlideCurve(_entryController.value);
         return Stack(
           children: [
-            // Blur + scrim
             Positioned.fill(
               child: BackdropFilter(
-                filter: ImageFilter.blur(
-                  sigmaX: blur,
-                  sigmaY: blur,
-                ),
+                filter: ImageFilter.blur(sigmaX: blur, sigmaY: blur),
                 child: ColoredBox(
-                  color: black.withValues(
-                    alpha:
-                        0.4 * _entryController.value,
-                  ),
+                  color: black.withValues(alpha: 0.4 * _entryController.value),
                 ),
               ),
             ),
-            // Dismiss on tap outside
             Positioned.fill(
               child: GestureDetector(
                 onTap: _dismiss,
@@ -137,16 +128,13 @@ class _VideoFeedViewRetentionPaywallState
                 child: const SizedBox.expand(),
               ),
             ),
-            // Card sliding up from bottom
             Positioned(
               left: 0,
               right: 0,
               bottom: 0,
               child: FractionalTranslation(
                 translation: Offset(0, slideT),
-                child: _PaywallCard(
-                  onUnlock: _dismiss,
-                ),
+                child: _PaywallCard(onUnlock: _dismiss),
               ),
             ),
           ],
@@ -154,35 +142,11 @@ class _VideoFeedViewRetentionPaywallState
       },
     );
   }
-
-  /// Custom slide curve: card starts fully off-screen
-  /// (translateY = 1.0), slides up past its resting
-  /// position (overshoots to -0.06), then bounces back
-  /// to 0.
-  double _cardSlideCurve(double t) {
-    if (t <= 0) return 1;
-    if (t >= 1) return 0;
-    // Phase 1 (0→0.55): slide from 1.0 to -0.06
-    // Phase 2 (0.55→0.75): bounce back to 0.03
-    // Phase 3 (0.75→1.0): settle to 0
-    if (t < 0.55) {
-      final p = t / 0.55;
-      final eased = Curves.easeOut.transform(p);
-      return 1.0 - 1.06 * eased;
-    } else if (t < 0.75) {
-      final p = (t - 0.55) / 0.2;
-      final eased = Curves.easeInOut.transform(p);
-      return -0.06 + 0.09 * eased;
-    } else {
-      final p = (t - 0.75) / 0.25;
-      final eased = Curves.easeOut.transform(p);
-      return 0.03 - 0.03 * eased;
-    }
-  }
 }
 
 class _PaywallCard extends StatelessWidget {
   const _PaywallCard({required this.onUnlock});
+
   final VoidCallback onUnlock;
 
   @override
@@ -194,24 +158,24 @@ class _PaywallCard extends StatelessWidget {
         right: context.w(16),
         bottom: context.h(40),
       ),
-      padding: context.paddingAll(24),
+      padding: context.paddingAll(28),
       decoration: BoxDecoration(
         gradient: const LinearGradient(
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
+          begin: Alignment.topCenter,
+          end: Alignment.bottomCenter,
           colors: [
-            Color(0xFF1E1E2E),
-            Color(0xFF2A1A3E),
+            Color(0xFF1A1035),
+            Color(0xFF0D0B1A),
           ],
         ),
-        borderRadius: context.radiusAll(20),
+        borderRadius: context.radiusAll(24),
         border: Border.all(
-          color: white.withValues(alpha: 0.1),
+          color: const Color(0xFF6B21A8).withValues(alpha: 0.4),
         ),
         boxShadow: [
           BoxShadow(
-            color: black.withValues(alpha: 0.5),
-            blurRadius: context.h(30),
+            color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
+            blurRadius: context.h(40),
             offset: Offset(0, context.h(10)),
           ),
         ],
@@ -220,45 +184,68 @@ class _PaywallCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Container(
-            padding: context.paddingAll(12),
+            padding: context.paddingAll(14),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: white.withValues(alpha: 0.08),
+              color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
             ),
             child: Icon(
-              Icons.lock_outline_rounded,
-              color: white,
-              size: context.sq(32),
+              Icons.lock_rounded,
+              color: const Color(0xFFD946EF),
+              size: context.sq(28),
             ),
           ),
-          context.hSpace(16),
+          context.hSpace(20),
           Text(
-            'Premium Content',
-            style: TextStyle(
+            'Unlock Full Episode',
+            style: GoogleFonts.onest(
               color: white,
               fontSize: context.fontSize(22),
               fontWeight: FontWeight.w700,
             ),
           ),
-          context.hSpace(8),
+          context.hSpace(10),
           Text(
-            'Unlock this episode to keep watching',
-            style: TextStyle(
-              color: white.withValues(alpha: 0.6),
-              fontSize: context.fontSize(14),
+            'Continue watching this gripping story.\nGet unlimited access to all episodes.',
+            textAlign: TextAlign.center,
+            style: GoogleFonts.onest(
+              color: white.withValues(alpha: 0.5),
+              fontSize: context.fontSize(13),
+              height: 1.5,
             ),
+          ),
+          context.hSpace(22),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                '₹49',
+                style: GoogleFonts.onest(
+                  color: const Color(0xFFFFD600),
+                  fontSize: context.fontSize(36),
+                  fontWeight: FontWeight.w800,
+                ),
+              ),
+              SizedBox(width: context.w(6)),
+              Text(
+                '/episode',
+                style: GoogleFonts.onest(
+                  color: white.withValues(alpha: 0.4),
+                  fontSize: context.fontSize(14),
+                ),
+              ),
+            ],
           ),
           context.hSpace(24),
           _ShimmerCtaButton(onTap: onUnlock),
-          context.hSpace(12),
-          GestureDetector(
-            onTap: onUnlock,
-            child: Text(
-              'Maybe later',
-              style: TextStyle(
-                color: white.withValues(alpha: 0.4),
-                fontSize: context.fontSize(13),
-              ),
+          context.hSpace(14),
+          Text(
+            'First episode free • Cancel anytime',
+            style: GoogleFonts.onest(
+              color: white.withValues(alpha: 0.35),
+              fontSize: context.fontSize(12),
             ),
           ),
         ],
@@ -269,22 +256,26 @@ class _PaywallCard extends StatelessWidget {
 
 class _ShimmerCtaButton extends StatefulWidget {
   const _ShimmerCtaButton({required this.onTap});
+
   final VoidCallback onTap;
 
   @override
-  State<_ShimmerCtaButton> createState() =>
-      _ShimmerCtaButtonState();
+  State<_ShimmerCtaButton> createState() => _ShimmerCtaButtonState();
 }
 
-class _ShimmerCtaButtonState
-    extends State<_ShimmerCtaButton>
-    with SingleTickerProviderStateMixin {
+class _ShimmerCtaButtonState extends State<_ShimmerCtaButton>
+    with TickerProviderStateMixin {
   late AnimationController _shimmerController;
+  late AnimationController _borderController;
 
   @override
   void initState() {
     super.initState();
     _shimmerController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 2500),
+    )..repeat();
+    _borderController = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 3000),
     )..repeat();
@@ -293,6 +284,7 @@ class _ShimmerCtaButtonState
   @override
   void dispose() {
     _shimmerController.dispose();
+    _borderController.dispose();
     super.dispose();
   }
 
@@ -301,20 +293,21 @@ class _ShimmerCtaButtonState
     return GestureDetector(
       onTap: widget.onTap,
       child: AnimatedBuilder(
-        animation: _shimmerController,
+        animation: Listenable.merge([_shimmerController, _borderController]),
         builder: (context, _) {
           return CustomPaint(
-            painter: _ShimmerButtonPainter(
-              progress: _shimmerController.value,
-              borderRadius: context.h(14),
+            painter: _ButtonPainter(
+              shimmerProgress: _shimmerController.value,
+              borderProgress: _borderController.value,
+              borderRadius: context.sq(14),
             ),
             child: Container(
               width: double.infinity,
-              padding: context.paddingVertical(14),
+              padding: context.paddingVertical(16),
               alignment: Alignment.center,
               child: Text(
                 'Unlock Episode',
-                style: TextStyle(
+                style: GoogleFonts.onest(
                   color: white,
                   fontSize: context.fontSize(16),
                   fontWeight: FontWeight.w700,
@@ -329,15 +322,15 @@ class _ShimmerCtaButtonState
   }
 }
 
-/// Custom painter that draws the gradient button
-/// background and a white shimmer band sweeping
-/// across it every cycle.
-class _ShimmerButtonPainter extends CustomPainter {
-  _ShimmerButtonPainter({
-    required this.progress,
+class _ButtonPainter extends CustomPainter {
+  _ButtonPainter({
+    required this.shimmerProgress,
+    required this.borderProgress,
     required this.borderRadius,
   });
-  final double progress;
+
+  final double shimmerProgress;
+  final double borderProgress;
   final double borderRadius;
 
   @override
@@ -347,45 +340,116 @@ class _ShimmerButtonPainter extends CustomPainter {
       Radius.circular(borderRadius),
     );
 
-    // Base gradient
     final basePaint = Paint()
       ..shader = const LinearGradient(
-        colors: [
-          Color(0xFFFF006E),
-          Color(0xFFFB5607),
-        ],
+        colors: [Color(0xFFD946EF), Color(0xFF7C3AED)],
       ).createShader(Offset.zero & size);
     canvas
       ..drawRRect(rrect, basePaint)
-      // Shimmer band — sweeps left to right
       ..save()
       ..clipRRect(rrect);
-    final bandWidth = size.width * 0.35;
-    // Extend range so band fully enters and exits
+
+    final bandWidth = size.width * 0.45;
     final totalTravel = size.width + bandWidth;
-    final bandCenter =
-        -bandWidth / 2 + totalTravel * progress;
-    final shimmerPaint = Paint()
+    final bandCenter = -bandWidth / 2 + totalTravel * shimmerProgress;
+    final shimmerRect = Rect.fromCenter(
+      center: Offset(bandCenter, size.height / 2),
+      width: bandWidth,
+      height: size.height,
+    );
+    final mainShimmer = Paint()
       ..shader = const LinearGradient(
         colors: [
           Color(0x00FFFFFF),
-          Color(0x55FFFFFF),
+          Color(0x18FFFFFF),
+          Color(0x66FFFFFF),
+          Color(0x18FFFFFF),
           Color(0x00FFFFFF),
         ],
-        stops: [0, 0.5, 1],
-      ).createShader(
-        Rect.fromCenter(
-          center: Offset(bandCenter, size.height / 2),
-          width: bandWidth,
-          height: size.height,
-        ),
+        stops: [0, 0.25, 0.5, 0.75, 1],
+      ).createShader(shimmerRect);
+    canvas.drawRect(Offset.zero & size, mainShimmer);
+
+    final trailProgress = (shimmerProgress - 0.15).clamp(0.0, 1.0) / 0.85;
+    if (trailProgress > 0) {
+      final trailCenter = -bandWidth / 2 + totalTravel * trailProgress;
+      final trailRect = Rect.fromCenter(
+        center: Offset(trailCenter, size.height / 2),
+        width: bandWidth * 0.6,
+        height: size.height,
       );
-    canvas
-      ..drawRect(Offset.zero & size, shimmerPaint)
-      ..restore();
+      final trailShimmer = Paint()
+        ..shader = const LinearGradient(
+          colors: [
+            Color(0x00D946EF),
+            Color(0x33D946EF),
+            Color(0x00D946EF),
+          ],
+        ).createShader(trailRect);
+      canvas.drawRect(Offset.zero & size, trailShimmer);
+    }
+
+    canvas.restore();
+    _drawProgressBorder(canvas, size);
+  }
+
+  void _drawProgressBorder(Canvas canvas, Size size) {
+    final rect = Offset.zero & size;
+    final rrect = RRect.fromRectAndRadius(rect, Radius.circular(borderRadius));
+    final path = Path()..addRRect(rrect);
+    final metrics = path.computeMetrics().first;
+    final totalLength = metrics.length;
+
+    final glowLength = totalLength * 0.3;
+    final segStart = totalLength * borderProgress;
+    final segEnd = segStart + glowLength;
+
+    final extractedPath = Path();
+    if (segEnd <= totalLength) {
+      extractedPath.addPath(
+        metrics.extractPath(segStart, segEnd),
+        Offset.zero,
+      );
+    } else {
+      extractedPath
+        ..addPath(metrics.extractPath(segStart, totalLength), Offset.zero)
+        ..addPath(metrics.extractPath(0, segEnd - totalLength), Offset.zero);
+    }
+
+    final glowPaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 3
+      ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4)
+      ..shader = const LinearGradient(
+        colors: [
+          Color(0x00D946EF),
+          Color(0xFFD946EF),
+          Color(0xFFFFD600),
+          Color(0xFFD946EF),
+          Color(0x00D946EF),
+        ],
+        stops: [0, 0.2, 0.5, 0.8, 1],
+      ).createShader(rect);
+    canvas.drawPath(extractedPath, glowPaint);
+
+    final corePaint = Paint()
+      ..style = PaintingStyle.stroke
+      ..strokeWidth = 1.5
+      ..shader = const LinearGradient(
+        colors: [
+          Color(0x00FFFFFF),
+          Color(0xCCFFFFFF),
+          Color(0xFFFFD600),
+          Color(0xCCFFFFFF),
+          Color(0x00FFFFFF),
+        ],
+        stops: [0, 0.2, 0.5, 0.8, 1],
+      ).createShader(rect);
+    canvas.drawPath(extractedPath, corePaint);
   }
 
   @override
-  bool shouldRepaint(_ShimmerButtonPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(_ButtonPainter old) =>
+      old.shimmerProgress != shimmerProgress ||
+      old.borderProgress != borderProgress;
 }

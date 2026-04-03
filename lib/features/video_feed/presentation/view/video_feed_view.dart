@@ -6,6 +6,7 @@ import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_fe
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_item.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_snap_physics.dart';
+import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_volume_gesture.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoFeedView extends StatefulWidget {
@@ -104,6 +105,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
       final controller = VideoPlayerController.file(videoFile);
       await controller.initialize();
       await controller.setLooping(true);
+      await controller.setVolume(VideoFeedViewVolumeGesture.globalVolume);
       _controllerCache[video.id] = controller;
       _touchController(video.id);
       _enforceCacheLimit();

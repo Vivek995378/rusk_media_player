@@ -10,6 +10,8 @@ class VideoFeedViewVolumeGesture extends StatefulWidget {
     super.key,
   });
 
+  static double globalVolume = 1;
+
   final VideoPlayerController? controller;
   final Widget child;
 
@@ -22,7 +24,6 @@ class _VideoFeedViewVolumeGestureState
     extends State<VideoFeedViewVolumeGesture>
     with SingleTickerProviderStateMixin {
   bool _isDragging = false;
-  double _volume = 1;
   double _dragStartY = 0;
   double _startVolume = 1;
   late AnimationController _fadeController;
@@ -39,6 +40,22 @@ class _VideoFeedViewVolumeGestureState
       parent: _fadeController,
       curve: Curves.easeOut,
     );
+    _applyGlobalVolume();
+  }
+
+  @override
+  void didUpdateWidget(VideoFeedViewVolumeGesture oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      _applyGlobalVolume();
+    }
+  }
+
+  void _applyGlobalVolume() {
+    final c = widget.controller;
+    if (c != null && c.value.isInitialized) {
+      c.setVolume(VideoFeedViewVolumeGesture.globalVolume);
+    }
   }
 
   @override
@@ -51,7 +68,7 @@ class _VideoFeedViewVolumeGestureState
     if (widget.controller == null) return;
     _isDragging = true;
     _dragStartY = details.localPosition.dy;
-    _startVolume = _volume;
+    _startVolume = VideoFeedViewVolumeGesture.globalVolume;
     _fadeController.forward();
     setState(() {});
   }
@@ -61,8 +78,8 @@ class _VideoFeedViewVolumeGestureState
     final dy = _dragStartY - details.localPosition.dy;
     final sensitivity = context.screenHeight * 0.5;
     final newVolume = (_startVolume + dy / sensitivity).clamp(0.0, 1.0);
-    _volume = newVolume;
-    widget.controller!.setVolume(_volume);
+    VideoFeedViewVolumeGesture.globalVolume = newVolume;
+    widget.controller!.setVolume(newVolume);
     setState(() {});
   }
 
@@ -73,8 +90,9 @@ class _VideoFeedViewVolumeGestureState
   }
 
   IconData get _volumeIcon {
-    if (_volume <= 0) return Icons.volume_off_rounded;
-    if (_volume < 0.5) return Icons.volume_down_rounded;
+    final v = VideoFeedViewVolumeGesture.globalVolume;
+    if (v <= 0) return Icons.volume_off_rounded;
+    if (v < 0.5) return Icons.volume_down_rounded;
     return Icons.volume_up_rounded;
   }
 
@@ -94,7 +112,10 @@ class _VideoFeedViewVolumeGestureState
             child: FadeTransition(
               opacity: _fadeAnimation,
               child: Center(
-                child: _VolumeBar(volume: _volume, icon: _volumeIcon),
+                child: _VolumeBar(
+                  volume: VideoFeedViewVolumeGesture.globalVolume,
+                  icon: _volumeIcon,
+                ),
               ),
             ),
           ),
