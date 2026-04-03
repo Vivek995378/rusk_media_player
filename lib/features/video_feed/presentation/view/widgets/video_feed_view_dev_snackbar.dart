@@ -131,6 +131,7 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
                     '${widget.feature} ${AppStrings.underDevelopment}',
                     style: AppTextStyle.bodyMedium,
                     fontWeight: FontWeight.w500,
+                    color: white,
                   ),
                 ),
                 Icon(
