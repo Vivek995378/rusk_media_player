@@ -57,7 +57,7 @@ class _VideoFeedViewShimmerLoadingState
       ]),
       builder: (context, _) {
         return ColoredBox(
-          color: Color(0xFF0A0A0A),
+          color: const Color(0xFF0A0A0A),
           child: Stack(
             children: [
               // Animated gradient waves

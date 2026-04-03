@@ -135,7 +135,7 @@ class _HeartBurstState extends State<_HeartBurst> {
         weight: 50,
       ),
       TweenSequenceItem(
-        tween: Tween(begin: 1.3, end: 1.0).chain(
+        tween: Tween<double>(begin: 1.3, end: 1).chain(
           CurveTween(curve: Curves.elasticOut),
         ),
         weight: 50,

@@ -131,38 +131,19 @@ class _VideoFeedViewOptimizedVideoPlayerState
       return const VideoFeedPremiumLoader();
     }
 
-    return GestureDetector(
-      onTap: () async {
-        try {
-          if (controller.value.isPlaying) {
-            await controller.pause();
-          } else {
-            await controller.play();
-          }
-          if (mounted) {
-            WidgetsBinding.instance
-                .addPostFrameCallback((_) {
-              if (mounted) setState(() {});
-            });
-          }
-        } catch (e) {
-          debugPrint('Error toggling playback: $e');
-        }
-      },
-      child: SizedBox.expand(
-        child: FittedBox(
-          key: _playerKey,
-          fit: BoxFit.cover,
-          child: SizedBox(
-            width: controller.value.size.width,
-            height: controller.value.size.height,
-            child: Stack(
-              children: [
-                VideoPlayer(controller),
-                if (_isBuffering)
-                  const VideoFeedViewBufferingIndicator(),
-              ],
-            ),
+    return SizedBox.expand(
+      child: FittedBox(
+        key: _playerKey,
+        fit: BoxFit.cover,
+        child: SizedBox(
+          width: controller.value.size.width,
+          height: controller.value.size.height,
+          child: Stack(
+            children: [
+              VideoPlayer(controller),
+              if (_isBuffering)
+                const VideoFeedViewBufferingIndicator(),
+            ],
           ),
         ),
       ),

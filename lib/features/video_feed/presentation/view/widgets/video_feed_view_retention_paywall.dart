@@ -366,13 +366,13 @@ class _ShimmerButtonPainter extends CustomPainter {
     final bandCenter =
         -bandWidth / 2 + totalTravel * progress;
     final shimmerPaint = Paint()
-      ..shader = LinearGradient(
-        colors: const [
+      ..shader = const LinearGradient(
+        colors: [
           Color(0x00FFFFFF),
           Color(0x55FFFFFF),
           Color(0x00FFFFFF),
         ],
-        stops: const [0, 0.5, 1],
+        stops: [0, 0.5, 1],
       ).createShader(
         Rect.fromCenter(
           center: Offset(bandCenter, size.height / 2),

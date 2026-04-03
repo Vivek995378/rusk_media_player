@@ -2,16 +2,16 @@ import 'package:flutter/material.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
-class VideoFeedViewInteractionButton
-    extends StatefulWidget {
+class VideoFeedViewInteractionButton extends StatefulWidget {
   const VideoFeedViewInteractionButton({
     required this.icon,
-    required this.count,
+    required this.onTap,
     super.key,
     this.color = white,
   });
+
   final IconData icon;
-  final int count;
+  final VoidCallback onTap;
   final Color color;
 
   @override
@@ -35,23 +35,17 @@ class _VideoFeedViewInteractionButtonState
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween<double>(begin: 1, end: 0.7)
-            .chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
+            .chain(CurveTween(curve: Curves.easeIn)),
         weight: 40,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 0.7, end: 1.2)
-            .chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 35,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 1.2, end: 1)
-            .chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
+            .chain(CurveTween(curve: Curves.easeInOut)),
         weight: 25,
       ),
     ]).animate(_controller);
@@ -63,14 +57,13 @@ class _VideoFeedViewInteractionButtonState
     super.dispose();
   }
 
-  void _onTap() {
-    _controller.forward(from: 0);
-  }
-
   @override
   Widget build(BuildContext context) {
     return GestureDetector(
-      onTap: _onTap,
+      onTap: () {
+        _controller.forward(from: 0);
+        widget.onTap();
+      },
       child: AnimatedBuilder(
         animation: _scaleAnimation,
         builder: (context, child) {
@@ -79,36 +72,12 @@ class _VideoFeedViewInteractionButtonState
             child: child,
           );
         },
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          spacing: context.h(4),
-          children: [
-            Icon(
-              widget.icon,
-              color: widget.color,
-              size: context.sq(36),
-            ),
-            Text(
-              _formatCount(widget.count),
-              style: TextStyle(
-                color: white,
-                fontSize: context.fontSize(13),
-                fontWeight: FontWeight.w500,
-              ),
-            ),
-          ],
+        child: Icon(
+          widget.icon,
+          color: widget.color,
+          size: context.sq(36),
         ),
       ),
     );
-  }
-
-  String _formatCount(int count) {
-    if (count >= 1000000) {
-      return '${(count / 1000000).toStringAsFixed(1)}M';
-    }
-    if (count >= 1000) {
-      return '${(count / 1000).toStringAsFixed(1)}K';
-    }
-    return count.toString();
   }
 }

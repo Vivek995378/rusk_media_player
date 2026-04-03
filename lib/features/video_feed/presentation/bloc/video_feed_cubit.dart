@@ -24,6 +24,16 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
   final _preloadedFiles = <String, File>{};
   bool _isPreloadingMore = false;
 
+  void toggleLike(String videoId) {
+    final updated = Set<String>.from(state.likedVideoIds);
+    if (updated.contains(videoId)) {
+      updated.remove(videoId);
+    } else {
+      updated.add(videoId);
+    }
+    emit(state.copyWith(likedVideoIds: updated));
+  }
+
   Future<void> loadVideos() async {
     emit(state.copyWith(isLoading: true, errorMessage: ''));
     final result = await _fetchVideosUseCase();

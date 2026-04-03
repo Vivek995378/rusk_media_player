@@ -7,22 +7,20 @@ class VideoFeedViewOverlaySection extends StatefulWidget {
     required this.profileImageUrl,
     required this.username,
     required this.description,
-    required this.isBookmarked,
     required this.isLiked,
-    required this.likeCount,
-    required this.commentCount,
-    required this.shareCount,
+    required this.onLikeTap,
+    required this.onCommentTap,
+    required this.onShareTap,
     super.key,
   });
 
   final String profileImageUrl;
   final String username;
   final String description;
-  final bool isBookmarked;
   final bool isLiked;
-  final int likeCount;
-  final int commentCount;
-  final int shareCount;
+  final VoidCallback onLikeTap;
+  final VoidCallback onCommentTap;
+  final VoidCallback onShareTap;
 
   @override
   State<VideoFeedViewOverlaySection> createState() =>
@@ -39,22 +37,18 @@ class _VideoFeedViewOverlaySectionState
   @override
   void initState() {
     super.initState();
-
     _controller = AnimationController(
       vsync: this,
       duration: const Duration(milliseconds: 600),
     );
-
     _userInfoAnim = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0, 0.6, curve: Curves.easeOut),
     );
-
     _buttonsAnim = CurvedAnimation(
       parent: _controller,
       curve: const Interval(0.2, 0.8, curve: Curves.easeOut),
     );
-
     _controller.forward();
   }
 
@@ -86,17 +80,15 @@ class _VideoFeedViewOverlaySectionState
                   ),
                 ),
               ),
-
               Transform.translate(
                 offset: Offset(30 * (1 - _buttonsAnim.value), 0),
                 child: Opacity(
                   opacity: _buttonsAnim.value,
                   child: VideoFeedViewInteractionButtons(
                     isLiked: widget.isLiked,
-                    isBookmarked: widget.isBookmarked,
-                    likeCount: widget.likeCount,
-                    commentCount: widget.commentCount,
-                    shareCount: widget.shareCount,
+                    onLikeTap: widget.onLikeTap,
+                    onCommentTap: widget.onCommentTap,
+                    onShareTap: widget.onShareTap,
                   ),
                 ),
               ),

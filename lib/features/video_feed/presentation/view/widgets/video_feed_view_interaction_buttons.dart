@@ -7,17 +7,16 @@ import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/
 class VideoFeedViewInteractionButtons extends StatelessWidget {
   const VideoFeedViewInteractionButtons({
     required this.isLiked,
-    required this.isBookmarked,
-    required this.likeCount,
-    required this.commentCount,
-    required this.shareCount,
+    required this.onLikeTap,
+    required this.onCommentTap,
+    required this.onShareTap,
     super.key,
   });
+
   final bool isLiked;
-  final bool isBookmarked;
-  final int likeCount;
-  final int commentCount;
-  final int shareCount;
+  final VoidCallback onLikeTap;
+  final VoidCallback onCommentTap;
+  final VoidCallback onShareTap;
 
   @override
   Widget build(BuildContext context) {
@@ -28,29 +27,20 @@ class VideoFeedViewInteractionButtons extends StatelessWidget {
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
-        spacing: context.h(20),
+        spacing: context.h(24),
         children: [
           VideoFeedViewInteractionButton(
-            icon: isLiked
-                ? Icons.favorite
-                : Icons.favorite_border,
-            count: likeCount,
+            icon: isLiked ? Icons.favorite : Icons.favorite_border,
             color: isLiked ? red : white,
+            onTap: onLikeTap,
           ),
           VideoFeedViewInteractionButton(
             icon: LucideIcons.messageCircle,
-            count: commentCount,
+            onTap: onCommentTap,
           ),
           VideoFeedViewInteractionButton(
             icon: LucideIcons.send,
-            count: shareCount,
-          ),
-          Icon(
-            isBookmarked
-                ? Icons.bookmark
-                : Icons.bookmark_border,
-            color: white,
-            size: context.sq(36),
+            onTap: onShareTap,
           ),
         ],
       ),

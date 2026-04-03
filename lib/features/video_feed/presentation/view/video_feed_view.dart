@@ -1,11 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:preload_page_view/preload_page_view.dart';
 import 'package:rusk_media_player/features/video_feed/domain/entities/video_entity.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_cubit.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_item.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_snap_physics.dart';
-import 'package:preload_page_view/preload_page_view.dart';
 import 'package:video_player/video_player.dart';
 
 class VideoFeedView extends StatefulWidget {
