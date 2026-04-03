@@ -1,3 +1,4 @@
+import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
@@ -8,12 +9,14 @@ import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.
 void showDevSnackbar(BuildContext context, String feature) {
   final overlay = Overlay.of(context);
   late OverlayEntry entry;
+
   entry = OverlayEntry(
     builder: (_) => _DevSnackbarOverlay(
       feature: feature,
       onDismiss: () => entry.remove(),
     ),
   );
+
   overlay.insert(entry);
 }
 
@@ -32,52 +35,61 @@ class _DevSnackbarOverlay extends StatefulWidget {
 
 class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
     with TickerProviderStateMixin {
-  late final AnimationController _slideController;
-  late final AnimationController _shakeController;
-  late final Animation<Offset> _slideAnimation;
-  late final Animation<double> _shakeAnimation;
+  late final AnimationController _mainController;
+  late final AnimationController _pulseController;
+
+  late final Animation<Offset> _slide;
+  late final Animation<double> _scale;
+  late final Animation<double> _fade;
+  late final Animation<double> _rotation;
+  late final Animation<double> _pulse;
 
   @override
   void initState() {
     super.initState();
-    _slideController = AnimationController(
+
+    _mainController = AnimationController(
       vsync: this,
-      duration: AppDurations.snackbarSlide,
+      duration: const Duration(milliseconds: 600),
     );
-    _shakeController = AnimationController(
+
+    _pulseController = AnimationController(
       vsync: this,
-      duration: AppDurations.snackbarShake,
-    );
-    _slideAnimation = Tween<Offset>(
+      duration: const Duration(milliseconds: 1200),
+    )..repeat(reverse: true);
+
+    _slide = Tween<Offset>(
       begin: const Offset(0, 1.5),
       end: Offset.zero,
     ).animate(
-      CurvedAnimation(parent: _slideController, curve: Curves.easeOutBack),
+      CurvedAnimation(parent: _mainController, curve: Curves.easeOutCubic),
     );
-    _shakeAnimation = TweenSequence<double>([
-      TweenSequenceItem(tween: Tween<double>(begin: 0, end: -8), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: -8, end: 8), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: 8, end: -6), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: -6, end: 6), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: 6, end: -3), weight: 1),
-      TweenSequenceItem(tween: Tween<double>(begin: -3, end: 0), weight: 1),
-    ]).animate(_shakeController);
 
-    _slideController.forward().then((_) {
-      _shakeController.forward().then((_) {
-        Future<void>.delayed(AppDurations.snackbarDisplay, () {
-          if (mounted) {
-            _slideController.reverse().then((_) => widget.onDismiss());
-          }
-        });
+    _scale = Tween<double>(begin: 0.85, end: 1).animate(
+      CurvedAnimation(parent: _mainController, curve: Curves.elasticOut),
+    );
+
+    _fade = Tween<double>(begin: 0, end: 1).animate(_mainController);
+
+    _rotation = Tween<double>(begin: -0.05, end: 0).animate(
+      CurvedAnimation(parent: _mainController, curve: Curves.easeOut),
+    );
+
+    _pulse = Tween<double>(begin: 0.9, end: 1.05).animate(_pulseController);
+
+    _mainController.forward().then((_) {
+      Future<void>.delayed(AppDurations.snackbarDisplay, () {
+        if (mounted) {
+          _mainController.reverse().then((_) => widget.onDismiss());
+        }
       });
     });
   }
 
   @override
   void dispose() {
-    _slideController.dispose();
-    _shakeController.dispose();
+    _mainController.dispose();
+    _pulseController.dispose();
     super.dispose();
   }
 
@@ -85,61 +97,87 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
   Widget build(BuildContext context) {
     return Positioned(
       bottom: context.h(40),
-      left: context.w(24),
-      right: context.w(24),
+      left: context.w(20),
+      right: context.w(20),
       child: SlideTransition(
-        position: _slideAnimation,
-        child: AnimatedBuilder(
-          animation: _shakeController,
-          builder: (context, child) {
-            return Transform.translate(
-              offset: Offset(_shakeAnimation.value, 0),
-              child: child,
-            );
-          },
-          child: Container(
-            padding: EdgeInsets.symmetric(
-              horizontal: context.w(16),
-              vertical: context.h(14),
-            ),
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                colors: [snackbarDarkStart, snackbarDarkEnd],
-              ),
-              borderRadius: context.radiusAll(14),
-              border: Border.all(
-                color: accentPink.withValues(alpha: 0.4),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: accentPink.withValues(alpha: 0.15),
-                  blurRadius: context.sq(20),
-                  spreadRadius: context.sq(2),
+        position: _slide,
+        child: FadeTransition(
+          opacity: _fade,
+          child: AnimatedBuilder(
+            animation: Listenable.merge([
+              _mainController,
+              _pulseController,
+            ]),
+            builder: (context, child) {
+              return Transform.rotate(
+                angle: _rotation.value,
+                child: Transform.scale(
+                  scale: _scale.value,
+                  child: child,
                 ),
-              ],
-            ),
-            child: Row(
-              children: [
-                Icon(
-                  Icons.construction_rounded,
-                  color: accentOrange,
-                  size: context.sq(24),
+              );
+            },
+            child: Container(
+              padding: EdgeInsets.symmetric(
+                horizontal: context.w(16),
+                vertical: context.h(14),
+              ),
+              decoration: BoxDecoration(
+                gradient: const LinearGradient(
+                  colors: [snackbarDarkStart, snackbarDarkEnd],
                 ),
-                SizedBox(width: context.w(12)),
-                Expanded(
-                  child: AppText(
-                    '${widget.feature} ${AppStrings.underDevelopment}',
-                    style: AppTextStyle.bodyMedium,
-                    fontWeight: FontWeight.w500,
-                    color: white,
+                borderRadius: context.radiusAll(16),
+                border: Border.all(
+                  color: accentPink.withValues(alpha: 0.4),
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: accentPink.withValues(alpha: 0.25),
+                    blurRadius: context.sq(25),
+                    spreadRadius: context.sq(3),
                   ),
-                ),
-                Icon(
-                  Icons.rocket_launch_rounded,
-                  color: snackbarGreen,
-                  size: context.sq(20),
-                ),
-              ],
+                ],
+              ),
+              child: Row(
+                children: [
+                  AnimatedBuilder(
+                    animation: _pulse,
+                    builder: (context, _) {
+                      return Transform.scale(
+                        scale: _pulse.value,
+                        child: Icon(
+                          Icons.auto_awesome,
+                          color: accentOrange,
+                          size: context.sq(26),
+                        ),
+                      );
+                    },
+                  ),
+
+                  context.wSpace(12),
+
+                  /// Text
+                  Expanded(
+                    child: AppText(
+                      '${widget.feature} ${AppStrings.underDevelopment}',
+                      style: AppTextStyle.bodyMedium,
+                      fontWeight: FontWeight.w500,
+                      color: white,
+                    ),
+                  ),
+
+                  context.wSpace(10),
+
+                  Transform.rotate(
+                    angle: pi / 8,
+                    child: Icon(
+                      Icons.explore,
+                      color: snackbarGreen,
+                      size: context.sq(20),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
