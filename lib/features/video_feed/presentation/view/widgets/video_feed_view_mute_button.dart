@@ -109,7 +109,11 @@ class _VideoFeedViewMuteButtonState extends State<VideoFeedViewMuteButton>
             child: Icon(
               _isMuted
                   ? Icons.volume_off_rounded
-                  : Icons.volume_up_rounded,
+                  : VideoFeedViewVolumeGesture.globalVolume >= 1
+                      ? Icons.volume_up_rounded
+                      : VideoFeedViewVolumeGesture.globalVolume >= 0.5
+                          ? Icons.volume_up_rounded
+                          : Icons.volume_down_rounded,
               color: white,
               size: context.sq(18),
             ),

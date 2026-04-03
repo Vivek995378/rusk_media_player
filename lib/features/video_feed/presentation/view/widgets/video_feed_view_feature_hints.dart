@@ -35,6 +35,9 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
   late AnimationController _doubleTapController;
   late AnimationController _swipeLoopController;
   late AnimationController _seekLoopController;
+  late AnimationController _ctaController;
+  late AnimationController _ctaPulseController;
+  bool _canDismiss = false;
 
   @override
   void initState() {
@@ -87,6 +90,14 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
       vsync: this,
       duration: const Duration(milliseconds: 1400),
     );
+    _ctaController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 800),
+    );
+    _ctaPulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1200),
+    );
     _runSequence();
   }
 
@@ -107,10 +118,11 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
     await Future<void>.delayed(const Duration(milliseconds: 300));
     await _hint5Controller.forward();
     unawaited(_seekLoopController.repeat());
-    await Future<void>.delayed(const Duration(seconds: 4));
+    await Future<void>.delayed(const Duration(milliseconds: 600));
     if (!mounted) return;
-    await _dismissController.forward();
-    if (mounted) widget.onDismiss();
+    await _ctaController.forward();
+    unawaited(_ctaPulseController.repeat(reverse: true));
+    if (mounted) setState(() => _canDismiss = true);
   }
 
   @override
@@ -127,6 +139,8 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
     _doubleTapController.dispose();
     _swipeLoopController.dispose();
     _seekLoopController.dispose();
+    _ctaController.dispose();
+    _ctaPulseController.dispose();
     super.dispose();
   }
 
@@ -141,7 +155,7 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
         if (opacity <= 0) return const SizedBox.shrink();
         return GestureDetector(
           onTap: () {
-            if (!_dismissController.isAnimating) {
+            if (_canDismiss && !_dismissController.isAnimating) {
               _dismissController.forward().then((_) {
                 if (mounted) widget.onDismiss();
               });
@@ -188,6 +202,11 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
                           animation: _hint5Controller,
                           icon: _SeekIcon(controller: _seekLoopController),
                           label: 'Hold & drag sideways to seek',
+                        ),
+                        context.hSpace(32),
+                        _ExperienceCta(
+                          entryController: _ctaController,
+                          pulseController: _ctaPulseController,
                         ),
                       ],
                     ),
@@ -538,6 +557,109 @@ class _SeekIcon extends StatelessWidget {
                   ),
                 ),
               ],
+            ),
+          ),
+        );
+      },
+    );
+  }
+}
+
+class _ExperienceCta extends StatelessWidget {
+  const _ExperienceCta({
+    required this.entryController,
+    required this.pulseController,
+  });
+
+  final AnimationController entryController;
+  final AnimationController pulseController;
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: Listenable.merge([entryController, pulseController]),
+      builder: (context, _) {
+        final entry = CurvedAnimation(
+          parent: entryController,
+          curve: Curves.easeOutBack,
+        ).value;
+        if (entry <= 0) return const SizedBox.shrink();
+        final pulse = pulseController.value;
+        final glowOpacity = 0.15 + pulse * 0.2;
+        final scale = 1.0 + pulse * 0.03;
+        return Opacity(
+          opacity: entry.clamp(0.0, 1.0),
+          child: Transform.translate(
+            offset: Offset(0, context.h(20) * (1 - entry)),
+            child: Transform.scale(
+              scale: scale,
+              child: Container(
+                width: double.infinity,
+                padding: EdgeInsets.symmetric(
+                  horizontal: context.w(20),
+                  vertical: context.h(16),
+                ),
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    colors: [
+                      MESupportiveColors.supportive800,
+                      MEBrandColors.primary700,
+                    ],
+                  ),
+                  borderRadius: context.radiusAll(16),
+                  boxShadow: [
+                    BoxShadow(
+                      color: MEBrandColors.primary500.withValues(
+                        alpha: glowOpacity,
+                      ),
+                      blurRadius: context.sq(24),
+                      spreadRadius: context.sq(2),
+                    ),
+                    BoxShadow(
+                      color: MESupportiveColors.supportive500.withValues(
+                        alpha: glowOpacity * 0.6,
+                      ),
+                      blurRadius: context.sq(40),
+                    ),
+                  ],
+                ),
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.play_circle_filled_rounded,
+                      color: white,
+                      size: context.sq(28),
+                    ),
+                    SizedBox(width: context.w(12)),
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        AppText(
+                          'Tap to experience',
+                          style: AppTextStyle.bodySmall,
+                          color: white.withValues(alpha: 0.7),
+                          letterSpacing: 0.5,
+                        ),
+                        AppText(
+                          'RUSK MEDIA',
+                          style: AppTextStyle.titleLarge,
+                          color: white,
+                          letterSpacing: 2,
+                          fontWeight: FontWeight.w900,
+                        ),
+                      ],
+                    ),
+                    SizedBox(width: context.w(12)),
+                    Icon(
+                      Icons.arrow_forward_rounded,
+                      color: white.withValues(alpha: 0.6 + pulse * 0.4),
+                      size: context.sq(22),
+                    ),
+                  ],
+                ),
+              ),
             ),
           ),
         );

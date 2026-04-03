@@ -158,7 +158,7 @@ class _VideoFeedPremiumLoaderState extends State<VideoFeedPremiumLoader>
               left: 0,
               right: 0,
               bottom: 0,
-              child: _LoadingBarWithRunner(progress: progress),
+              child: _LoadingBarWithRunnerContent(progress: progress),
             ),
           ],
         );
@@ -257,8 +257,45 @@ class _PremiumParticlePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-class _LoadingBarWithRunner extends StatelessWidget {
-  const _LoadingBarWithRunner({required this.progress});
+class LoadingBarWithRunner extends StatefulWidget {
+  const LoadingBarWithRunner({super.key});
+
+  @override
+  State<LoadingBarWithRunner> createState() => _LoadingBarWithRunnerState();
+}
+
+class _LoadingBarWithRunnerState extends State<LoadingBarWithRunner>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: AppDurations.loaderMain,
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return AnimatedBuilder(
+      animation: _controller,
+      builder: (context, _) {
+        return _LoadingBarWithRunnerContent(progress: _controller.value);
+      },
+    );
+  }
+}
+
+class _LoadingBarWithRunnerContent extends StatelessWidget {
+  const _LoadingBarWithRunnerContent({required this.progress});
 
   final double progress;
 

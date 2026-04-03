@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_premium_loader.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_shimmer_loading.dart';
 import 'package:video_player/video_player.dart';
@@ -102,20 +103,11 @@ class _VideoFeedViewOptimizedVideoPlayerState
     }
     final isBuffering = controller.value.isBuffering;
     final isPlaying = controller.value.isPlaying;
-    var shouldShowBuffering = isBuffering;
-    if ((isPlaying &&
-            controller.value.position > Duration.zero) ||
-        (controller.value.position > Duration.zero &&
-            controller.value.duration.inMilliseconds >
-                0)) {
-      shouldShowBuffering = false;
-    }
-    if (_isBuffering != shouldShowBuffering ||
-        _isPlaying != isPlaying) {
+    if (_isBuffering != isBuffering || _isPlaying != isPlaying) {
       WidgetsBinding.instance.addPostFrameCallback((_) {
         if (mounted) {
           setState(() {
-            _isBuffering = shouldShowBuffering;
+            _isBuffering = isBuffering;
             _isPlaying = isPlaying;
           });
         }
@@ -144,12 +136,28 @@ class _VideoFeedViewOptimizedVideoPlayerState
           child: Stack(
             children: [
               VideoPlayer(controller),
-              if (_isBuffering)
+              if (_isBuffering) ...[
                 const VideoFeedViewBufferingIndicator(),
+                const _BufferingOverlay(),
+              ],
             ],
           ),
         ),
       ),
+    );
+  }
+}
+
+class _BufferingOverlay extends StatelessWidget {
+  const _BufferingOverlay();
+
+  @override
+  Widget build(BuildContext context) {
+    return Positioned(
+      left: context.w(40),
+      right: context.w(40),
+      bottom: context.h(60),
+      child: const LoadingBarWithRunner(),
     );
   }
 }
