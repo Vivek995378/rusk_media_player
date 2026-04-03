@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:video_player/video_player.dart';
 
@@ -34,7 +37,7 @@ class _VideoFeedViewVolumeGestureState
     super.initState();
     _fadeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: AppDurations.volumeFade,
     );
     _fadeAnimation = CurvedAnimation(
       parent: _fadeController,
@@ -133,9 +136,9 @@ class _VolumeBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final barHeight = context.h(180);
+    final barHeight = context.h(AppSizes.volumeBarHeight);
     return Container(
-      width: context.w(36),
+      width: context.w(AppSizes.volumeBarWidth),
       padding: context.paddingVertical(10),
       decoration: BoxDecoration(
         color: black.withValues(alpha: 0.55),
@@ -148,7 +151,7 @@ class _VolumeBar extends StatelessWidget {
           SizedBox(height: context.h(8)),
           SizedBox(
             height: barHeight,
-            width: context.w(4),
+            width: context.w(AppSizes.volumeBarTrackWidth),
             child: Stack(
               alignment: Alignment.bottomCenter,
               children: [
@@ -163,15 +166,7 @@ class _VolumeBar extends StatelessWidget {
                   child: Container(
                     decoration: BoxDecoration(
                       borderRadius: context.radiusAll(2),
-                      gradient: const LinearGradient(
-                        begin: Alignment.bottomCenter,
-                        end: Alignment.topCenter,
-                        colors: [
-                          Color(0xFF00E676),
-                          Color(0xFF69F0AE),
-                          white,
-                        ],
-                      ),
+                      gradient: volumeBarGradient,
                     ),
                   ),
                 ),
@@ -179,13 +174,9 @@ class _VolumeBar extends StatelessWidget {
             ),
           ),
           SizedBox(height: context.h(8)),
-          Text(
+          AppText(
             '${(volume * 100).round()}',
-            style: TextStyle(
-              color: white,
-              fontSize: context.fontSize(11),
-              fontWeight: FontWeight.w600,
-            ),
+            style: AppTextStyle.labelSmall,
           ),
         ],
       ),

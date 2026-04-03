@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
 void showDevSnackbar(BuildContext context, String feature) {
@@ -40,11 +42,11 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
     super.initState();
     _slideController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: AppDurations.snackbarSlide,
     );
     _shakeController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: AppDurations.snackbarShake,
     );
     _slideAnimation = Tween<Offset>(
       begin: const Offset(0, 1.5),
@@ -63,7 +65,7 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
 
     _slideController.forward().then((_) {
       _shakeController.forward().then((_) {
-        Future<void>.delayed(const Duration(seconds: 2), () {
+        Future<void>.delayed(AppDurations.snackbarDisplay, () {
           if (mounted) {
             _slideController.reverse().then((_) => widget.onDismiss());
           }
@@ -102,7 +104,7 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
             ),
             decoration: BoxDecoration(
               gradient: const LinearGradient(
-                colors: [Color(0xFF1A1A2E), Color(0xFF16213E)],
+                colors: [snackbarDarkStart, snackbarDarkEnd],
               ),
               borderRadius: context.radiusAll(14),
               border: Border.all(
@@ -125,18 +127,15 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
                 ),
                 SizedBox(width: context.w(12)),
                 Expanded(
-                  child: Text(
-                    '${widget.feature} is under development',
-                    style: GoogleFonts.onest(
-                      color: white,
-                      fontSize: context.fontSize(14),
-                      fontWeight: FontWeight.w500,
-                    ),
+                  child: AppText(
+                    '${widget.feature} ${AppStrings.underDevelopment}',
+                    style: AppTextStyle.bodyMedium,
+                    fontWeight: FontWeight.w500,
                   ),
                 ),
                 Icon(
                   Icons.rocket_launch_rounded,
-                  color: const Color(0xFF69F0AE),
+                  color: snackbarGreen,
                   size: context.sq(20),
                 ),
               ],

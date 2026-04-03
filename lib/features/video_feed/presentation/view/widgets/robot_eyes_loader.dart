@@ -1,15 +1,17 @@
 import 'package:flutter/material.dart';
-import 'dart:math';
+import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 
 class RobotEyesLoader extends StatefulWidget {
+  const RobotEyesLoader({
+    super.key,
+    this.eyeSize = AppSizes.loaderEyeSize,
+    this.eyeColor = loaderOrange,
+  });
+
   final double eyeSize;
   final Color eyeColor;
-
-  const RobotEyesLoader({
-    Key? key,
-    this.eyeSize = 36,
-    this.eyeColor = const Color(0xFFFF3D00),
-  }) : super(key: key);
 
   @override
   State<RobotEyesLoader> createState() => _RobotEyesLoaderState();
@@ -32,7 +34,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
     super.initState();
 
     _blinkController = AnimationController(
-      duration: const Duration(milliseconds: 120),
+      duration: AppDurations.robotBlink,
       vsync: this,
     );
     _blinkAnim = Tween<double>(begin: 1.0, end: 0.05).animate(
@@ -40,7 +42,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
     );
 
     _glowController = AnimationController(
-      duration: const Duration(milliseconds: 1200),
+      duration: AppDurations.robotGlow,
       vsync: this,
     )..repeat(reverse: true);
     _glowAnim = Tween<double>(begin: 0.5, end: 1.0).animate(
@@ -48,7 +50,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
     );
 
     _lookController = AnimationController(
-      duration: const Duration(milliseconds: 600),
+      duration: AppDurations.robotLook,
       vsync: this,
     );
     _lookAnim = Tween<double>(begin: -1.0, end: 1.0).animate(
@@ -56,7 +58,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
     );
 
     _mouthController = AnimationController(
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.robotMouth,
       vsync: this,
     );
     _mouthAnim = Tween<double>(begin: 0.0, end: 1.0).animate(
@@ -66,38 +68,48 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
     _startBlinkLoop();
   }
 
-  void _startBlinkLoop() async {
-    _mouthController.repeat(reverse: true, period: const Duration(milliseconds: 1800));
+  Future<void> _startBlinkLoop() async {
+    _mouthController.repeat(
+      reverse: true,
+      period: AppDurations.robotMouthLoop,
+    );
 
     while (mounted) {
-      await Future.delayed(const Duration(milliseconds: 2000));
+      await Future<void>.delayed(AppDurations.robotBlinkDelay);
       if (!mounted) return;
 
       await _lookController.forward();
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future<void>.delayed(AppDurations.robotLookDelay);
       if (!mounted) return;
 
       _mouthController.stop();
-      _mouthController.animateTo(0.6, duration: const Duration(milliseconds: 100));
+      _mouthController.animateTo(
+        0.6,
+        duration: const Duration(milliseconds: 100),
+      );
       await _blinkController.forward();
       await _blinkController.reverse();
       if (!mounted) return;
 
       await _lookController.reverse();
-      await Future.delayed(const Duration(milliseconds: 400));
+      await Future<void>.delayed(AppDurations.robotLookDelay);
       if (!mounted) return;
 
-      _mouthController.animateTo(0.3, duration: const Duration(milliseconds: 100));
+      _mouthController.animateTo(
+        0.3,
+        duration: const Duration(milliseconds: 100),
+      );
       await _blinkController.forward();
       await _blinkController.reverse();
       if (!mounted) return;
 
-      await _lookController.animateTo(0.5,
-          duration: const Duration(milliseconds: 300));
+      await _lookController.animateTo(0.5, duration: AppDurations.robotLookCenter);
       _mouthController.repeat(
-          reverse: true, period: const Duration(milliseconds: 1800));
+        reverse: true,
+        period: AppDurations.robotMouthLoop,
+      );
 
-      await Future.delayed(const Duration(milliseconds: 800));
+      await Future<void>.delayed(AppDurations.robotBlinkCenterDelay);
     }
   }
 
@@ -112,7 +124,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
 
   Widget _buildEye() {
     final size = widget.eyeSize;
-    final pupilSize = size * 0.38;
+    final pupilSize = size * AppSizes.loaderPupilRatio;
 
     return AnimatedBuilder(
       animation: Listenable.merge([_blinkAnim, _glowAnim, _lookAnim]),
@@ -125,7 +137,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
             width: size,
             height: size,
             decoration: BoxDecoration(
-              color: Colors.black,
+              color: black,
               borderRadius: BorderRadius.circular(size * 0.22),
               border: Border.all(
                 color: widget.eyeColor.withValues(alpha: _glowAnim.value),
@@ -169,7 +181,7 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
                       width: pupilSize * 0.28,
                       height: pupilSize * 0.28,
                       decoration: const BoxDecoration(
-                        color: Colors.white,
+                        color: white,
                         shape: BoxShape.circle,
                       ),
                     ),
@@ -209,8 +221,8 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
   @override
   Widget build(BuildContext context) {
     final eyeSize = widget.eyeSize;
-    final eyeGap = eyeSize * 0.55;
-    final mouthMarginTop = eyeSize * 0.55;
+    final eyeGap = eyeSize * AppSizes.loaderEyeGap;
+    final mouthMarginTop = eyeSize * AppSizes.loaderMouthMargin;
 
     return Column(
       mainAxisSize: MainAxisSize.min,
@@ -231,8 +243,6 @@ class _RobotEyesLoaderState extends State<RobotEyesLoader>
   }
 }
 
-/// Draws a clean curved robot smile using a cubic bezier path.
-/// openAmount 0.0 = flat line, 1.0 = wide open smile arc.
 class _MouthPainter extends CustomPainter {
   const _MouthPainter({
     required this.openAmount,
@@ -249,18 +259,19 @@ class _MouthPainter extends CustomPainter {
     final w = size.width;
     final h = size.height;
 
-    // Control point depth — 0 = flat, h = full arc
     final curveDepth = openAmount * h * 0.85;
 
     final path = Path()
       ..moveTo(0, h * 0.3)
       ..cubicTo(
-        w * 0.25, h * 0.3 + curveDepth, // left control
-        w * 0.75, h * 0.3 + curveDepth, // right control
-        w, h * 0.3,                      // end point
+        w * 0.25,
+        h * 0.3 + curveDepth,
+        w * 0.75,
+        h * 0.3 + curveDepth,
+        w,
+        h * 0.3,
       );
 
-    // Glow shadow pass
     final glowPaint = Paint()
       ..color = color.withValues(alpha: glowAmount * 0.45)
       ..style = PaintingStyle.stroke
@@ -270,7 +281,6 @@ class _MouthPainter extends CustomPainter {
 
     canvas.drawPath(path, glowPaint);
 
-    // Main stroke pass
     final mainPaint = Paint()
       ..color = color.withValues(alpha: 0.9 + glowAmount * 0.1)
       ..style = PaintingStyle.stroke
@@ -283,6 +293,6 @@ class _MouthPainter extends CustomPainter {
   @override
   bool shouldRepaint(_MouthPainter old) =>
       old.openAmount != openAmount ||
-          old.glowAmount != glowAmount ||
-          old.color != color;
+      old.glowAmount != glowAmount ||
+      old.color != color;
 }

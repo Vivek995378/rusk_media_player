@@ -1,7 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
+import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
 class SplashView extends StatefulWidget {
@@ -20,19 +24,15 @@ class _SplashViewState extends State<SplashView>
   late AnimationController _taglineController;
   late AnimationController _exitController;
 
-  // Logo animations
   late Animation<double> _logoScale;
   late Animation<double> _logoOpacity;
   late Animation<double> _logoRotation;
 
-  // Text animations
   late Animation<double> _textSlide;
   late Animation<double> _textOpacity;
 
-  // Tagline
   late Animation<double> _taglineOpacity;
 
-  // Exit
   late Animation<double> _exitScale;
   late Animation<double> _exitOpacity;
 
@@ -44,102 +44,84 @@ class _SplashViewState extends State<SplashView>
   }
 
   void _initAnimations() {
-    // Background gradient rotation
     _bgController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 4000),
+      duration: AppDurations.splashBackground,
     )..repeat();
 
-    // Logo: scale up with bounce + rotate
     _logoController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 800),
+      duration: AppDurations.splashLogo,
     );
     _logoScale = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween<double>(begin: 0, end: 1.15)
-            .chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 60,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 1.15, end: 0.95)
-            .chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
+            .chain(CurveTween(curve: Curves.easeIn)),
         weight: 20,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 0.95, end: 1)
-            .chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 20,
       ),
     ]).animate(_logoController);
-    _logoOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(
+    _logoOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _logoController,
         curve: const Interval(0, 0.4),
       ),
     );
-    _logoRotation =
-        Tween<double>(begin: -0.1, end: 0).animate(
+    _logoRotation = Tween<double>(begin: -0.1, end: 0).animate(
       CurvedAnimation(
         parent: _logoController,
         curve: Curves.easeOut,
       ),
     );
 
-    // Company name slide up
     _textController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: AppDurations.splashText,
     );
-    _textSlide = Tween<double>(begin: 30, end: 0)
-        .animate(
+    _textSlide = Tween<double>(begin: 30, end: 0).animate(
       CurvedAnimation(
         parent: _textController,
         curve: Curves.easeOut,
       ),
     );
-    _textOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(
+    _textOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _textController,
         curve: Curves.easeOut,
       ),
     );
 
-    // Tagline fade in
     _taglineController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 500),
+      duration: AppDurations.splashTagline,
     );
-    _taglineOpacity = Tween<double>(begin: 0, end: 1)
-        .animate(
+    _taglineOpacity = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _taglineController,
         curve: Curves.easeIn,
       ),
     );
 
-    // Exit zoom out
     _exitController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 400),
+      duration: AppDurations.splashExit,
     );
-    _exitScale = Tween<double>(begin: 1, end: 1.5)
-        .animate(
+    _exitScale = Tween<double>(begin: 1, end: 1.5).animate(
       CurvedAnimation(
         parent: _exitController,
         curve: Curves.easeIn,
       ),
     );
-    _exitOpacity = Tween<double>(begin: 1, end: 0)
-        .animate(
+    _exitOpacity = Tween<double>(begin: 1, end: 0).animate(
       CurvedAnimation(
         parent: _exitController,
         curve: Curves.easeIn,
@@ -148,21 +130,13 @@ class _SplashViewState extends State<SplashView>
   }
 
   Future<void> _runSequence() async {
-    await Future<void>.delayed(
-      const Duration(milliseconds: 300),
-    );
+    await Future<void>.delayed(AppDurations.splash);
     await _logoController.forward();
-    await Future<void>.delayed(
-      const Duration(milliseconds: 200),
-    );
+    await Future<void>.delayed(const Duration(milliseconds: 200));
     await _textController.forward();
-    await Future<void>.delayed(
-      const Duration(milliseconds: 150),
-    );
+    await Future<void>.delayed(const Duration(milliseconds: 150));
     await _taglineController.forward();
-    await Future<void>.delayed(
-      const Duration(milliseconds: 800),
-    );
+    await Future<void>.delayed(const Duration(milliseconds: 800));
     await _exitController.forward();
     widget.onComplete();
   }
@@ -195,86 +169,47 @@ class _SplashViewState extends State<SplashView>
             child: Scaffold(
               body: Stack(
                 children: [
-                  // Animated gradient background
-                  _AnimatedBackground(
-                    progress: _bgController.value,
-                  ),
-                  // Particle field
+                  _AnimatedBackground(progress: _bgController.value),
                   const _ParticleField(),
-                  // Center content
                   Center(
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Logo icon
                         Opacity(
-                          opacity: _logoOpacity.value
-                              .clamp(0, 1),
+                          opacity: _logoOpacity.value.clamp(0, 1),
                           child: Transform.scale(
-                            scale: _logoScale.value
-                                .clamp(0, 2),
+                            scale: _logoScale.value.clamp(0, 2),
                             child: Transform.rotate(
-                              angle:
-                                  _logoRotation.value,
-                              child: _LogoIcon(
-                                size:
-                                    context.sq(80),
-                              ),
+                              angle: _logoRotation.value,
+                              child: _LogoIcon(size: context.sq(AppSizes.logoSize)),
                             ),
                           ),
                         ),
                         context.hSpace(24),
-                        // Company name
                         Transform.translate(
-                          offset: Offset(
-                            0,
-                            _textSlide.value,
-                          ),
+                          offset: Offset(0, _textSlide.value),
                           child: Opacity(
-                            opacity: _textOpacity
-                                .value
-                                .clamp(0, 1),
+                            opacity: _textOpacity.value.clamp(0, 1),
                             child: ShaderMask(
-                              blendMode:
-                                  BlendMode.srcIn,
-                              shaderCallback:
-                                  (bounds) =>
-                                      brandGradient
-                                          .createShader(
-                                bounds,
-                              ),
-                              child: Text(
-                                'RUSK MEDIA',
-                                style: TextStyle(
-                                  fontSize: context
-                                      .fontSize(36),
-                                  fontWeight:
-                                      FontWeight.w900,
-                                  letterSpacing: 4,
-                                ),
+                              blendMode: BlendMode.srcIn,
+                              shaderCallback: (bounds) =>
+                                  brandGradient.createShader(bounds),
+                              child: AppText(
+                                AppStrings.appName,
+                                style: AppTextStyle.headlineLarge,
+                                letterSpacing: AppSizes.splashTitleLetterSpacing,
                               ),
                             ),
                           ),
                         ),
                         context.hSpace(12),
-                        // Tagline
                         Opacity(
-                          opacity: _taglineOpacity
-                              .value
-                              .clamp(0, 1),
-                          child: Text(
-                            'Micro-Drama Interactive'
-                            ' Player',
-                            style: TextStyle(
-                              color: white.withValues(
-                                alpha: 0.6,
-                              ),
-                              fontSize:
-                                  context.fontSize(14),
-                              fontWeight:
-                                  FontWeight.w400,
-                              letterSpacing: 2,
-                            ),
+                          opacity: _taglineOpacity.value.clamp(0, 1),
+                          child: AppText(
+                            AppStrings.appTagline,
+                            style: AppTextStyle.bodySmall,
+                            color: white.withValues(alpha: 0.6),
+                            letterSpacing: AppSizes.splashSubtitleLetterSpacing,
                           ),
                         ),
                       ],
@@ -301,7 +236,7 @@ class _LogoIcon extends StatelessWidget {
       height: size,
       decoration: BoxDecoration(
         gradient: brandGradient,
-        borderRadius: BorderRadius.circular(size * 0.25),
+        borderRadius: BorderRadius.circular(size * AppSizes.logoCornerRatio),
         boxShadow: [
           BoxShadow(
             color: accentPink.withValues(alpha: 0.4),
@@ -313,16 +248,14 @@ class _LogoIcon extends StatelessWidget {
       child: Icon(
         Icons.play_arrow_rounded,
         color: white,
-        size: size * 0.55,
+        size: size * AppSizes.logoIconRatio,
       ),
     );
   }
 }
 
 class _AnimatedBackground extends StatelessWidget {
-  const _AnimatedBackground({
-    required this.progress,
-  });
+  const _AnimatedBackground({required this.progress});
   final double progress;
 
   @override
@@ -338,11 +271,7 @@ class _AnimatedBackground extends StatelessWidget {
             -cos(progress * 2 * pi),
             -sin(progress * 2 * pi),
           ),
-          colors: const [
-            Color(0xFF0A0A0A),
-            Color(0xFF1A0A2E),
-            Color(0xFF0A0A0A),
-          ],
+          colors: const [splashDark, splashPurpleDark, splashDark],
         ),
       ),
     );
@@ -353,8 +282,7 @@ class _ParticleField extends StatefulWidget {
   const _ParticleField();
 
   @override
-  State<_ParticleField> createState() =>
-      _ParticleFieldState();
+  State<_ParticleField> createState() => _ParticleFieldState();
 }
 
 class _ParticleFieldState extends State<_ParticleField>
@@ -367,11 +295,11 @@ class _ParticleFieldState extends State<_ParticleField>
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 10),
+      duration: AppDurations.splashParticle,
     )..repeat();
     final rng = Random(42);
     _particles = List.generate(
-      20,
+      AppSizes.particleCount,
       (_) => _Particle(
         x: rng.nextDouble(),
         y: rng.nextDouble(),
@@ -431,12 +359,8 @@ class _ParticlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     for (final p in particles) {
-      final y =
-          (p.y + progress * p.speed) % 1.0;
-      final paint = Paint()
-        ..color = accentPink.withValues(
-          alpha: p.opacity,
-        );
+      final y = (p.y + progress * p.speed) % 1.0;
+      final paint = Paint()..color = accentPink.withValues(alpha: p.opacity);
       canvas.drawCircle(
         Offset(p.x * size.width, y * size.height),
         p.size,

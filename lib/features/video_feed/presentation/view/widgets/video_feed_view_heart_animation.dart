@@ -2,6 +2,9 @@ import 'dart:math';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 
 class VideoFeedViewHeartAnimation extends StatefulWidget {
   const VideoFeedViewHeartAnimation({super.key});
@@ -22,7 +25,7 @@ class VideoFeedViewHeartAnimationState
     final id = _counter++;
     final ctrl = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: AppDurations.heartAnimation,
     );
     final entry = _BurstEntry(
       id: id,
@@ -37,9 +40,7 @@ class VideoFeedViewHeartAnimationState
           ctrl.dispose();
           if (mounted) {
             setState(() {
-              _bursts.removeWhere(
-                (b) => b.id == id,
-              );
+              _bursts.removeWhere((b) => b.id == id);
             });
           }
         }
@@ -88,7 +89,6 @@ class _BurstEntry {
   final AnimationController controller;
 }
 
-/// A single burst: 1 primary heart + 4 satellites.
 class _HeartBurst extends StatefulWidget {
   const _HeartBurst({
     required this.origin,
@@ -99,27 +99,24 @@ class _HeartBurst extends StatefulWidget {
   final AnimationController controller;
 
   @override
-  State<_HeartBurst> createState() =>
-      _HeartBurstState();
+  State<_HeartBurst> createState() => _HeartBurstState();
 }
 
 class _HeartBurstState extends State<_HeartBurst> {
   final _rng = Random();
 
-  // Primary heart animations
   late final Animation<double> _primaryScale;
   late final Animation<double> _primaryOpacity;
   late final Animation<double> _primaryDy;
 
-  // Satellite data
   late final List<_Satellite> _satellites;
 
   static const _palette = [
-    Color(0xFFFF1744),
-    Color(0xFFFF4081),
-    Color(0xFFFF6090),
-    Color(0xFFFF80AB),
-    Color(0xFFFF1493),
+    heartRed,
+    heartPink,
+    heartLight,
+    heartSoft,
+    heartFuchsia,
   ];
 
   @override
@@ -142,33 +139,30 @@ class _HeartBurstState extends State<_HeartBurst> {
       ),
     ]).animate(ctrl);
 
-    // Primary: hold visible 26%, then fade
     _primaryOpacity = TweenSequence<double>([
       TweenSequenceItem(
         tween: ConstantTween<double>(1),
         weight: 26,
       ),
       TweenSequenceItem(
-        tween: Tween<double>(begin: 1, end: 0)
-            .chain(
+        tween: Tween<double>(begin: 1, end: 0).chain(
           CurveTween(curve: Curves.easeIn),
         ),
         weight: 74,
       ),
     ]).animate(ctrl);
 
-    _primaryDy = Tween<double>(begin: 0, end: -90)
-        .animate(
+    _primaryDy = Tween<double>(begin: 0, end: -90).animate(
       CurvedAnimation(
         parent: ctrl,
         curve: Curves.easeOut,
       ),
     );
 
-    // 4 satellites with random scatter
     _satellites = List.generate(4, (i) {
       return _Satellite(
-        size: _rng.nextDouble() * 20 + 20,
+        size: _rng.nextDouble() * AppSizes.heartSatelliteMinSize +
+            AppSizes.heartSatelliteMinSize,
         color: _palette[_rng.nextInt(_palette.length)].withValues(alpha: 0.9),
         dxEnd: (_rng.nextDouble() - 0.5) * 100,
         dyEnd: -(_rng.nextDouble() * 80 + 60),
@@ -195,21 +189,18 @@ class _HeartBurstState extends State<_HeartBurst> {
   }
 
   Widget _buildPrimary() {
-    const half = 44.0;
+    const half = AppSizes.heartPrimarySize / 2;
     return Positioned(
       left: widget.origin.dx - half,
-      top: widget.origin.dy - half +
-          _primaryDy.value,
+      top: widget.origin.dy - half + _primaryDy.value,
       child: Opacity(
-        opacity:
-            _primaryOpacity.value.clamp(0.0, 1.0),
+        opacity: _primaryOpacity.value.clamp(0.0, 1.0),
         child: Transform.scale(
-          scale:
-              _primaryScale.value.clamp(0.0, 2.0),
+          scale: _primaryScale.value.clamp(0.0, 2.0),
           child: const Icon(
             Icons.favorite,
-            color: Color(0xFFFF1744),
-            size: 88,
+            color: heartRed,
+            size: AppSizes.heartPrimarySize,
             shadows: [
               Shadow(
                 color: Color(0x55FF1744),
@@ -223,35 +214,24 @@ class _HeartBurstState extends State<_HeartBurst> {
   }
 
   Widget _buildSatellite(_Satellite s) {
-    final t = ((widget.controller.value - s.delay) /
-            (1.0 - s.delay))
+    final t = ((widget.controller.value - s.delay) / (1.0 - s.delay))
         .clamp(0.0, 1.0);
 
     final double scale;
     if (t < 0.40) {
-      scale = 0.4 +
-          Curves.easeOut.transform(t / 0.40) * 0.8;
+      scale = 0.4 + Curves.easeOut.transform(t / 0.40) * 0.8;
     } else if (t < 0.60) {
-      scale = 1.2 -
-          Curves.easeOutCubic
-                  .transform((t - 0.40) / 0.20) *
-              0.2;
+      scale = 1.2 - Curves.easeOutCubic.transform((t - 0.40) / 0.20) * 0.2;
     } else {
       scale = 1;
     }
 
     final opacity = t < 0.26
         ? 1.0
-        : (1.0 -
-                Curves.easeIn.transform(
-                  (t - 0.26) / 0.74,
-                ))
-            .clamp(0.0, 1.0);
+        : (1.0 - Curves.easeIn.transform((t - 0.26) / 0.74)).clamp(0.0, 1.0);
 
-    final dy =
-        Curves.easeOut.transform(t) * s.dyEnd;
-    final dx =
-        Curves.easeInOut.transform(t) * s.dxEnd;
+    final dy = Curves.easeOut.transform(t) * s.dyEnd;
+    final dx = Curves.easeInOut.transform(t) * s.dxEnd;
     final half = s.size / 2;
 
     return Positioned(

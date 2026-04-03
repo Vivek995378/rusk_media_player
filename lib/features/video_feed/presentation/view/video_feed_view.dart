@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:preload_page_view/preload_page_view.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/features/video_feed/domain/entities/video_entity.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_cubit.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
@@ -17,7 +19,6 @@ class VideoFeedView extends StatefulWidget {
 
 class _VideoFeedViewState extends State<VideoFeedView>
     with WidgetsBindingObserver {
-  final int _maxCacheSize = 3;
   List<VideoEntity> _videos = [];
   int _currentPage = 0;
   final PreloadPageController _pageController = PreloadPageController();
@@ -69,7 +70,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
     if (controller != null &&
         (controller.value.hasError || !controller.value.isInitialized)) {
       await _removeController(videoId);
-      await Future<void>.delayed(const Duration(milliseconds: 50));
+      await Future<void>.delayed(AppDurations.controllerCleanupDelay);
     }
     await _initAndPlayVideo(_currentPage);
   }
@@ -165,7 +166,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
   }
 
   void _enforceCacheLimit() {
-    while (_controllerCache.length > _maxCacheSize &&
+    while (_controllerCache.length > AppSizes.maxControllerCache &&
         _accessOrder.isNotEmpty) {
       _removeController(_accessOrder.first);
     }

@@ -1,37 +1,26 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 
-/// Snappy scroll physics for the vertical video feed.
-/// Lower thresholds + higher velocity = instant-feeling
-/// page transitions like TikTok / Reels.
-class VideoFeedViewSnapPhysics
-    extends ScrollPhysics {
+class VideoFeedViewSnapPhysics extends ScrollPhysics {
   const VideoFeedViewSnapPhysics({super.parent});
 
   @override
-  VideoFeedViewSnapPhysics applyTo(
-    ScrollPhysics? ancestor,
-  ) {
-    return VideoFeedViewSnapPhysics(
-      parent: buildParent(ancestor),
-    );
+  VideoFeedViewSnapPhysics applyTo(ScrollPhysics? ancestor) {
+    return VideoFeedViewSnapPhysics(parent: buildParent(ancestor));
   }
 
   @override
   SpringDescription get spring {
     return const SpringDescription(
-      mass: 0.3,
-      stiffness: 300,
-      damping: 22,
+      mass: AppSizes.springMass,
+      stiffness: AppSizes.springStiffness,
+      damping: AppSizes.springDamping,
     );
   }
 
-  /// Lower velocity threshold so even a light flick
-  /// triggers a page change.
   @override
-  double get minFlingVelocity => 50;
+  double get minFlingVelocity => AppSizes.minFlingVelocity;
 
-  /// Lower distance threshold so a small drag commits
-  /// to the next page.
   @override
-  double get minFlingDistance => 20;
+  double get minFlingDistance => AppSizes.minFlingDistance;
 }

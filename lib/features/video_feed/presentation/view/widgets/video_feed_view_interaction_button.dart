@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
 class VideoFeedViewInteractionButton extends StatefulWidget {
@@ -30,7 +32,7 @@ class _VideoFeedViewInteractionButtonState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 250),
+      duration: AppDurations.buttonScale,
     );
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
@@ -75,7 +77,7 @@ class _VideoFeedViewInteractionButtonState
         child: Icon(
           widget.icon,
           color: widget.color,
-          size: context.sq(36),
+          size: context.sq(AppSizes.interactionIconSize),
         ),
       ),
     );

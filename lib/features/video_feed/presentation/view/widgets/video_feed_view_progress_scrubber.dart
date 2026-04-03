@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:video_player/video_player.dart';
 
@@ -29,10 +32,9 @@ class _VideoFeedViewProgressScrubberState
     super.initState();
     _expandController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 200),
+      duration: AppDurations.progressScrubber,
     );
-    _expandAnimation = Tween<double>(begin: 0, end: 1)
-        .animate(
+    _expandAnimation = Tween<double>(begin: 0, end: 1).animate(
       CurvedAnimation(
         parent: _expandController,
         curve: Curves.easeOut,
@@ -42,9 +44,7 @@ class _VideoFeedViewProgressScrubberState
   }
 
   @override
-  void didUpdateWidget(
-    VideoFeedViewProgressScrubber oldWidget,
-  ) {
+  void didUpdateWidget(VideoFeedViewProgressScrubber oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
       oldWidget.controller?.removeListener(_onVideoTick);
@@ -79,18 +79,14 @@ class _VideoFeedViewProgressScrubberState
       if (ctrl == null || !ctrl.value.isInitialized) {
         return Duration.zero;
       }
-      final ms = (_scrubProgress *
-              ctrl.value.duration.inMilliseconds)
-          .round();
+      final ms = (_scrubProgress * ctrl.value.duration.inMilliseconds).round();
       return Duration(milliseconds: ms);
     }
-    return widget.controller?.value.position ??
-        Duration.zero;
+    return widget.controller?.value.position ?? Duration.zero;
   }
 
   Duration get _totalDuration {
-    return widget.controller?.value.duration ??
-        Duration.zero;
+    return widget.controller?.value.duration ?? Duration.zero;
   }
 
   void _onHorizontalDragStart(DragStartDetails d) {
@@ -119,9 +115,7 @@ class _VideoFeedViewProgressScrubberState
     if (!_isScrubbing) return;
     final ctrl = widget.controller;
     if (ctrl != null && ctrl.value.isInitialized) {
-      final ms = (_scrubProgress *
-              ctrl.value.duration.inMilliseconds)
-          .round();
+      final ms = (_scrubProgress * ctrl.value.duration.inMilliseconds).round();
       ctrl
         ..seekTo(Duration(milliseconds: ms))
         ..play();
@@ -147,8 +141,7 @@ class _VideoFeedViewProgressScrubberState
 
   @override
   Widget build(BuildContext context) {
-    final progress =
-        _isScrubbing ? _scrubProgress : _currentProgress;
+    final progress = _isScrubbing ? _scrubProgress : _currentProgress;
 
     return GestureDetector(
       onHorizontalDragStart: _onHorizontalDragStart,
@@ -159,31 +152,24 @@ class _VideoFeedViewProgressScrubberState
         animation: _expandAnimation,
         builder: (context, child) {
           final expandT = _expandAnimation.value;
-          // Bar height: 3 → 8 when scrubbing
-          final barHeight =
-              context.h(3) + context.h(5) * expandT;
+          final barHeight = context.h(AppSizes.progressBarHeight) +
+              context.h(AppSizes.progressBarExpandedHeight - AppSizes.progressBarHeight) * expandT;
 
           return SizedBox(
-            height: context.h(40),
+            height: context.h(AppSizes.progressBarTouchHeight),
             child: Stack(
               clipBehavior: Clip.none,
               alignment: Alignment.bottomCenter,
               children: [
-                // Time preview tooltip
                 if (_isScrubbing)
                   Positioned(
                     bottom: context.h(20),
                     left: _scrubX - context.w(40),
                     child: _TimePreview(
-                      current: _formatDuration(
-                        _currentPosition,
-                      ),
-                      total: _formatDuration(
-                        _totalDuration,
-                      ),
+                      current: _formatDuration(_currentPosition),
+                      total: _formatDuration(_totalDuration),
                     ),
                   ),
-                // Progress bar
                 Positioned(
                   left: 0,
                   right: 0,
@@ -224,13 +210,9 @@ class _TimePreview extends StatelessWidget {
         color: black.withValues(alpha: 0.7),
         borderRadius: context.radiusAll(6),
       ),
-      child: Text(
+      child: AppText(
         '$current / $total',
-        style: TextStyle(
-          color: white,
-          fontSize: context.fontSize(12),
-          fontWeight: FontWeight.w600,
-        ),
+        style: AppTextStyle.labelMedium,
       ),
     );
   }
@@ -246,9 +228,7 @@ class _ProgressBarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Background track
-    final bgPaint = Paint()
-      ..color = white.withValues(alpha: 0.3);
+    final bgPaint = Paint()..color = white.withValues(alpha: 0.3);
     canvas.drawRRect(
       RRect.fromRectAndRadius(
         Rect.fromLTWH(0, 0, size.width, size.height),
@@ -257,36 +237,23 @@ class _ProgressBarPainter extends CustomPainter {
       bgPaint,
     );
 
-    // Filled portion with gradient
     if (progress > 0) {
       final filledWidth = size.width * progress;
-      final gradient = const LinearGradient(
-        colors: [
-          Color(0xFFFF006E),
-          Color(0xFFFB5607),
-        ],
-      ).createShader(
+      final gradient = progressBarGradient.createShader(
         Rect.fromLTWH(0, 0, filledWidth, size.height),
       );
       final fillPaint = Paint()..shader = gradient;
       canvas.drawRRect(
         RRect.fromRectAndRadius(
-          Rect.fromLTWH(
-            0,
-            0,
-            filledWidth,
-            size.height,
-          ),
+          Rect.fromLTWH(0, 0, filledWidth, size.height),
           Radius.circular(size.height / 2),
         ),
         fillPaint,
       );
     }
 
-    // Scrub handle (appears when expanded)
     if (expandFactor > 0 && progress > 0) {
-      final handleRadius =
-          (size.height * 1.5) * expandFactor;
+      final handleRadius = (size.height * 1.5) * expandFactor;
       final handleX = size.width * progress;
       final handlePaint = Paint()..color = white;
       canvas.drawCircle(
@@ -299,6 +266,5 @@ class _ProgressBarPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_ProgressBarPainter old) =>
-      old.progress != progress ||
-      old.expandFactor != expandFactor;
+      old.progress != progress || old.expandFactor != expandFactor;
 }

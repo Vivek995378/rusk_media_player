@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
 import 'package:rusk_media_player/features/video_feed/domain/entities/video_entity.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_cubit.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
@@ -87,8 +88,10 @@ class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
                     description: widget.videoItem.description,
                     isLiked: isLiked,
                     onLikeTap: _toggleLike,
-                    onCommentTap: () => showDevSnackbar(context, 'Comments'),
-                    onShareTap: () => showDevSnackbar(context, 'Share'),
+                    onCommentTap: () =>
+                        showDevSnackbar(context, AppStrings.commentsFeature),
+                    onShareTap: () =>
+                        showDevSnackbar(context, AppStrings.shareFeature),
                   );
                 },
               ),

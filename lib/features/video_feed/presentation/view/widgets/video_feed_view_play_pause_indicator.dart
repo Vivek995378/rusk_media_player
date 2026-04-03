@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
 class VideoFeedViewPlayPauseIndicator extends StatefulWidget {
@@ -25,7 +27,7 @@ class VideoFeedViewPlayPauseIndicatorState
     _controller?.dispose();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: AppDurations.playPauseIndicator,
     );
     _scale = TweenSequence<double>([
       TweenSequenceItem(
@@ -84,28 +86,18 @@ class VideoFeedViewPlayPauseIndicatorState
             child: Transform.scale(
               scale: _scale.value.clamp(0.0, 2.0),
               child: Container(
-                width: context.sq(80),
-                height: context.sq(80),
+                width: context.sq(AppSizes.playPauseContainerSize),
+                height: context.sq(AppSizes.playPauseContainerSize),
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
                   gradient: RadialGradient(
                     colors: _isPlaying
-                        ? [
-                            const Color(0xFF00E676),
-                            const Color(0xFF00C853),
-                            const Color(0xFF009624),
-                          ]
-                        : [
-                            accentPink,
-                            const Color(0xFFFF4081),
-                            const Color(0xFFD50000),
-                          ],
+                        ? [playGreen, playGreenDark, playGreenDarkest]
+                        : [accentPink, heartPink, pauseRed],
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: (_isPlaying
-                              ? const Color(0xFF00E676)
-                              : accentPink)
+                      color: (_isPlaying ? playGreen : accentPink)
                           .withValues(alpha: 0.5),
                       blurRadius: context.sq(30),
                       spreadRadius: context.sq(5),
@@ -115,7 +107,7 @@ class VideoFeedViewPlayPauseIndicatorState
                 child: Icon(
                   _isPlaying ? Icons.play_arrow_rounded : Icons.pause_rounded,
                   color: white,
-                  size: context.sq(44),
+                  size: context.sq(AppSizes.playPauseIconSize),
                 ),
               ),
             ),

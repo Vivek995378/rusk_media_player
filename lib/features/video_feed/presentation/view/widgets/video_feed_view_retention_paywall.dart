@@ -1,8 +1,11 @@
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
+import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:video_player/video_player.dart';
 
@@ -22,8 +25,6 @@ class VideoFeedViewRetentionPaywall extends StatefulWidget {
 class _VideoFeedViewRetentionPaywallState
     extends State<VideoFeedViewRetentionPaywall>
     with TickerProviderStateMixin {
-  static const _triggerSecond = 10;
-
   bool _triggered = false;
   bool _dismissed = false;
   late AnimationController _entryController;
@@ -34,7 +35,7 @@ class _VideoFeedViewRetentionPaywallState
     super.initState();
     _entryController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 700),
+      duration: AppDurations.paywallEntry,
     );
     _blurAnimation = Tween<double>(begin: 0, end: 12).animate(
       CurvedAnimation(parent: _entryController, curve: Curves.easeOut),
@@ -67,7 +68,7 @@ class _VideoFeedViewRetentionPaywallState
     if (_triggered || _dismissed || !mounted) return;
     final ctrl = widget.controller;
     if (ctrl == null || !ctrl.value.isInitialized) return;
-    if (ctrl.value.position.inSeconds >= _triggerSecond) {
+    if (ctrl.value.position.inSeconds >= AppSizes.paywallTriggerSeconds) {
       _triggered = true;
       ctrl.pause();
       _entryController.forward();
@@ -154,27 +155,20 @@ class _PaywallCard extends StatelessWidget {
     return Container(
       width: double.infinity,
       margin: EdgeInsets.only(
-        left: context.w(16),
-        right: context.w(16),
-        bottom: context.h(40),
+        left: context.w(AppSizes.paywallCardMargin),
+        right: context.w(AppSizes.paywallCardMargin),
+        bottom: context.h(AppSizes.paywallBottomMargin),
       ),
-      padding: context.paddingAll(28),
+      padding: context.paddingAll(AppSizes.paywallCardPadding),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [
-            Color(0xFF1A1035),
-            Color(0xFF0D0B1A),
-          ],
-        ),
-        borderRadius: context.radiusAll(24),
+        gradient: paywallCardGradient,
+        borderRadius: context.radiusAll(AppSizes.paywallCardRadius),
         border: Border.all(
-          color: const Color(0xFF6B21A8).withValues(alpha: 0.4),
+          color: paywallPurple.withValues(alpha: 0.4),
         ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF7C3AED).withValues(alpha: 0.15),
+            color: paywallViolet.withValues(alpha: 0.15),
             blurRadius: context.h(40),
             offset: Offset(0, context.h(10)),
           ),
@@ -187,32 +181,26 @@ class _PaywallCard extends StatelessWidget {
             padding: context.paddingAll(14),
             decoration: BoxDecoration(
               shape: BoxShape.circle,
-              color: const Color(0xFF7C3AED).withValues(alpha: 0.2),
+              color: paywallViolet.withValues(alpha: 0.2),
             ),
             child: Icon(
               Icons.lock_rounded,
-              color: const Color(0xFFD946EF),
+              color: paywallFuchsia,
               size: context.sq(28),
             ),
           ),
           context.hSpace(20),
-          Text(
-            'Unlock Full Episode',
-            style: GoogleFonts.onest(
-              color: white,
-              fontSize: context.fontSize(22),
-              fontWeight: FontWeight.w700,
-            ),
+          AppText(
+            AppStrings.paywallTitle,
+            style: AppTextStyle.headlineSmall,
           ),
           context.hSpace(10),
-          Text(
-            'Continue watching this gripping story.\nGet unlimited access to all episodes.',
+          AppText(
+            AppStrings.paywallDescription,
+            style: AppTextStyle.bodySmall,
             textAlign: TextAlign.center,
-            style: GoogleFonts.onest(
-              color: white.withValues(alpha: 0.5),
-              fontSize: context.fontSize(13),
-              height: 1.5,
-            ),
+            color: white.withValues(alpha: 0.5),
+            height: 1.5,
           ),
           context.hSpace(22),
           Row(
@@ -220,33 +208,27 @@ class _PaywallCard extends StatelessWidget {
             crossAxisAlignment: CrossAxisAlignment.baseline,
             textBaseline: TextBaseline.alphabetic,
             children: [
-              Text(
-                '₹49',
-                style: GoogleFonts.onest(
-                  color: const Color(0xFFFFD600),
-                  fontSize: context.fontSize(36),
-                  fontWeight: FontWeight.w800,
-                ),
+              AppText(
+                AppStrings.paywallPrice,
+                style: AppTextStyle.headlineLarge,
+                color: paywallGold,
+                fontWeight: FontWeight.w800,
               ),
               SizedBox(width: context.w(6)),
-              Text(
-                '/episode',
-                style: GoogleFonts.onest(
-                  color: white.withValues(alpha: 0.4),
-                  fontSize: context.fontSize(14),
-                ),
+              AppText(
+                AppStrings.paywallPriceUnit,
+                style: AppTextStyle.bodyMedium,
+                color: white.withValues(alpha: 0.4),
               ),
             ],
           ),
           context.hSpace(24),
           _ShimmerCtaButton(onTap: onUnlock),
           context.hSpace(14),
-          Text(
-            'First episode free • Cancel anytime',
-            style: GoogleFonts.onest(
-              color: white.withValues(alpha: 0.35),
-              fontSize: context.fontSize(12),
-            ),
+          AppText(
+            AppStrings.paywallFooter,
+            style: AppTextStyle.bodySmall,
+            color: white.withValues(alpha: 0.35),
           ),
         ],
       ),
@@ -273,11 +255,11 @@ class _ShimmerCtaButtonState extends State<_ShimmerCtaButton>
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2500),
+      duration: AppDurations.paywallShimmer,
     )..repeat();
     _borderController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 3000),
+      duration: AppDurations.paywallBorder,
     )..repeat();
   }
 
@@ -305,14 +287,10 @@ class _ShimmerCtaButtonState extends State<_ShimmerCtaButton>
               width: double.infinity,
               padding: context.paddingVertical(16),
               alignment: Alignment.center,
-              child: Text(
-                'Unlock Episode',
-                style: GoogleFonts.onest(
-                  color: white,
-                  fontSize: context.fontSize(16),
-                  fontWeight: FontWeight.w700,
-                  letterSpacing: 0.5,
-                ),
+              child: AppText(
+                AppStrings.paywallCta,
+                style: AppTextStyle.titleMedium,
+                letterSpacing: 0.5,
               ),
             ),
           );
@@ -341,9 +319,7 @@ class _ButtonPainter extends CustomPainter {
     );
 
     final basePaint = Paint()
-      ..shader = const LinearGradient(
-        colors: [Color(0xFFD946EF), Color(0xFF7C3AED)],
-      ).createShader(Offset.zero & size);
+      ..shader = paywallButtonGradient.createShader(Offset.zero & size);
     canvas
       ..drawRRect(rrect, basePaint)
       ..save()

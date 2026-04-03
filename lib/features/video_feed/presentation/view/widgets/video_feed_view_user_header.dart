@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_follow_button.dart';
 
@@ -17,40 +19,33 @@ class VideoFeedViewUserHeader extends StatelessWidget {
     return Row(
       spacing: context.w(8),
       children: [
-        // Gradient ring around avatar
         Container(
-          padding: context.paddingAll(2),
+          padding: context.paddingAll(AppSizes.avatarRingPadding),
           decoration: const BoxDecoration(
             shape: BoxShape.circle,
             gradient: brandGradient,
           ),
           child: Container(
-            padding: context.paddingAll(2),
+            padding: context.paddingAll(AppSizes.avatarRingPadding),
             decoration: const BoxDecoration(
               shape: BoxShape.circle,
               color: black,
             ),
             child: CircleAvatar(
-              radius: context.sq(18),
-              backgroundImage: NetworkImage(
-                profileImageUrl,
-              ),
+              radius: context.sq(AppSizes.avatarRadius),
+              backgroundImage: NetworkImage(profileImageUrl),
             ),
           ),
         ),
-        Text(
+        AppText(
           username,
-          style: TextStyle(
-            color: white,
-            fontWeight: FontWeight.bold,
-            fontSize: context.fontSize(16),
-            shadows: [
-              Shadow(
-                color: black.withValues(alpha: 0.5),
-                blurRadius: 4,
-              ),
-            ],
-          ),
+          style: AppTextStyle.titleMedium,
+          shadows: [
+            Shadow(
+              color: black.withValues(alpha: 0.5),
+              blurRadius: 4,
+            ),
+          ],
         ),
         const VideoFeedViewFollowButton(),
       ],

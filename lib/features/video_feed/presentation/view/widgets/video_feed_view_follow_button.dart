@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
 class VideoFeedViewFollowButton extends StatefulWidget {
@@ -10,8 +13,7 @@ class VideoFeedViewFollowButton extends StatefulWidget {
       _VideoFeedViewFollowButtonState();
 }
 
-class _VideoFeedViewFollowButtonState
-    extends State<VideoFeedViewFollowButton>
+class _VideoFeedViewFollowButtonState extends State<VideoFeedViewFollowButton>
     with SingleTickerProviderStateMixin {
   late AnimationController _controller;
   late Animation<double> _scaleAnimation;
@@ -22,28 +24,22 @@ class _VideoFeedViewFollowButtonState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 300),
+      duration: AppDurations.followButtonScale,
     );
     _scaleAnimation = TweenSequence<double>([
       TweenSequenceItem(
         tween: Tween<double>(begin: 1, end: 0.85)
-            .chain(
-          CurveTween(curve: Curves.easeIn),
-        ),
+            .chain(CurveTween(curve: Curves.easeIn)),
         weight: 35,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 0.85, end: 1.1)
-            .chain(
-          CurveTween(curve: Curves.easeOut),
-        ),
+            .chain(CurveTween(curve: Curves.easeOut)),
         weight: 40,
       ),
       TweenSequenceItem(
         tween: Tween<double>(begin: 1.1, end: 1)
-            .chain(
-          CurveTween(curve: Curves.easeInOut),
-        ),
+            .chain(CurveTween(curve: Curves.easeInOut)),
         weight: 25,
       ),
     ]).animate(_controller);
@@ -73,7 +69,7 @@ class _VideoFeedViewFollowButtonState
           );
         },
         child: AnimatedContainer(
-          duration: const Duration(milliseconds: 250),
+          duration: AppDurations.followButtonContainer,
           curve: Curves.easeOut,
           padding: EdgeInsets.symmetric(
             horizontal: context.w(12),
@@ -81,26 +77,13 @@ class _VideoFeedViewFollowButtonState
           ),
           margin: context.paddingLeft(10),
           decoration: BoxDecoration(
-            gradient: _isFollowing
-                ? null
-                : const LinearGradient(
-                    colors: [
-                      accentPink,
-                      accentOrange,
-                    ],
-                  ),
-            color: _isFollowing
-                ? white.withValues(alpha: 0.15)
-                : null,
+            gradient: _isFollowing ? null : followButtonGradient,
+            color: _isFollowing ? white.withValues(alpha: 0.15) : null,
             borderRadius: context.radiusAll(8),
           ),
-          child: Text(
-            _isFollowing ? 'Following' : 'Follow',
-            style: TextStyle(
-              color: white,
-              fontSize: context.fontSize(13),
-              fontWeight: FontWeight.w600,
-            ),
+          child: AppText(
+            _isFollowing ? AppStrings.followingLabel : AppStrings.followLabel,
+            style: AppTextStyle.labelMedium,
           ),
         ),
       ),

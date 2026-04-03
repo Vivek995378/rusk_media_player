@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
-import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 
 class VideoFeedViewDescriptionText extends StatelessWidget {
   const VideoFeedViewDescriptionText({
@@ -11,20 +12,20 @@ class VideoFeedViewDescriptionText extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Text(
-      text.length > 50
-          ? '${text.substring(0, 50)}...'
-          : text,
-      style: TextStyle(
-        color: white.withValues(alpha: 0.9),
-        fontSize: context.fontSize(15),
-        shadows: [
-          Shadow(
-            color: black.withValues(alpha: 0.6),
-            blurRadius: 4,
-          ),
-        ],
-      ),
+    final displayText = text.length > AppSizes.descriptionMaxLength
+        ? '${text.substring(0, AppSizes.descriptionMaxLength)}...'
+        : text;
+
+    return AppText(
+      displayText,
+      style: AppTextStyle.bodyMedium,
+      color: white.withValues(alpha: 0.9),
+      shadows: [
+        Shadow(
+          color: black.withValues(alpha: 0.6),
+          blurRadius: 4,
+        ),
+      ],
     );
   }
 }

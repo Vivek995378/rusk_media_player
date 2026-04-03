@@ -1,12 +1,13 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
+import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
+import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 
-/// Full-screen cinematic shimmer loading state.
-/// Shows an animated gradient background with a
-/// pulsing play icon and floating shimmer particles.
 class VideoFeedViewShimmerLoading extends StatefulWidget {
   const VideoFeedViewShimmerLoading({super.key});
 
@@ -27,15 +28,15 @@ class _VideoFeedViewShimmerLoadingState
     super.initState();
     _shimmerController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 2000),
+      duration: AppDurations.shimmer,
     )..repeat();
     _pulseController = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1500),
+      duration: AppDurations.shimmerPulse,
     )..repeat(reverse: true);
     _particleController = AnimationController(
       vsync: this,
-      duration: const Duration(seconds: 6),
+      duration: AppDurations.shimmerParticle,
     )..repeat();
   }
 
@@ -57,44 +58,28 @@ class _VideoFeedViewShimmerLoadingState
       ]),
       builder: (context, _) {
         return ColoredBox(
-          color: const Color(0xFF0A0A0A),
+          color: splashDark,
           child: Stack(
             children: [
-              // Animated gradient waves
-              _GradientWaves(
-                progress: _shimmerController.value,
-              ),
-              // Floating particles
-              _FloatingParticles(
-                progress: _particleController.value,
-              ),
-              // Bottom loading bar
+              _GradientWaves(progress: _shimmerController.value),
+              _FloatingParticles(progress: _particleController.value),
               Positioned(
                 left: context.w(40),
                 right: context.w(40),
                 bottom: context.h(120),
-                child: _LoadingBar(
-                  progress: _shimmerController.value,
-                ),
+                child: _LoadingBar(progress: _shimmerController.value),
               ),
-              // "Loading" text
               Positioned(
                 left: 0,
                 right: 0,
                 bottom: context.h(90),
                 child: Center(
                   child: Opacity(
-                    opacity: 0.3 +
-                        0.3 * _pulseController.value,
-                    child: Text(
-                      'Loading...',
-                      style: TextStyle(
-                        color: white,
-                        fontSize:
-                            context.fontSize(13),
-                        fontWeight: FontWeight.w400,
-                        letterSpacing: 2,
-                      ),
+                    opacity: 0.3 + 0.3 * _pulseController.value,
+                    child: AppText(
+                      AppStrings.loading,
+                      style: AppTextStyle.bodySmall,
+                      letterSpacing: 2,
                     ),
                   ),
                 ),
@@ -127,52 +112,38 @@ class _WavePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Subtle moving gradient bands
     for (var i = 0; i < 3; i++) {
       final offset = (progress + i * 0.33) % 1.0;
       final centerY = size.height * offset;
       final paint = Paint()
         ..shader = RadialGradient(
           colors: [
-            accentPurple.withValues(
-              alpha: 0.06 - i * 0.015,
-            ),
+            accentPurple.withValues(alpha: 0.06 - i * 0.015),
             transparent,
           ],
         ).createShader(
           Rect.fromCircle(
-            center: Offset(
-              size.width * 0.5,
-              centerY,
-            ),
+            center: Offset(size.width * 0.5, centerY),
             radius: size.width * 0.8,
           ),
         );
-      canvas.drawRect(
-        Offset.zero & size,
-        paint,
-      );
+      canvas.drawRect(Offset.zero & size, paint);
     }
   }
 
   @override
-  bool shouldRepaint(_WavePainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(_WavePainter old) => old.progress != progress;
 }
 
 class _FloatingParticles extends StatelessWidget {
-  const _FloatingParticles({
-    required this.progress,
-  });
+  const _FloatingParticles({required this.progress});
   final double progress;
 
   @override
   Widget build(BuildContext context) {
     return CustomPaint(
       size: Size.infinite,
-      painter: _ParticlePainter(
-        progress: progress,
-      ),
+      painter: _ParticlePainter(progress: progress),
     );
   }
 }
@@ -184,19 +155,14 @@ class _ParticlePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final rng = Random(42);
-    for (var i = 0; i < 15; i++) {
+    for (var i = 0; i < AppSizes.shimmerParticleCount; i++) {
       final x = rng.nextDouble();
       final speed = 0.15 + rng.nextDouble() * 0.4;
       final dotSize = 1.0 + rng.nextDouble() * 2.5;
       final opacity = 0.05 + rng.nextDouble() * 0.15;
 
-      // Float upward
-      final y =
-          1.0 - (progress * speed + x) % 1.0;
-      final paint = Paint()
-        ..color = accentPink.withValues(
-          alpha: opacity,
-        );
+      final y = 1.0 - (progress * speed + x) % 1.0;
+      final paint = Paint()..color = accentPink.withValues(alpha: opacity);
       canvas.drawCircle(
         Offset(x * size.width, y * size.height),
         dotSize,
@@ -220,9 +186,7 @@ class _LoadingBar extends StatelessWidget {
       child: SizedBox(
         height: context.h(3),
         child: CustomPaint(
-          painter: _LoadingBarPainter(
-            progress: progress,
-          ),
+          painter: _LoadingBarPainter(progress: progress),
           size: Size.infinite,
         ),
       ),
@@ -236,54 +200,32 @@ class _LoadingBarPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    // Track
     canvas.drawRect(
       Offset.zero & size,
-      Paint()
-        ..color = white.withValues(alpha: 0.06),
+      Paint()..color = white.withValues(alpha: 0.06),
     );
 
-    // Animated segment
     final segmentWidth = size.width * 0.35;
     final totalTravel = size.width + segmentWidth;
-    final startX =
-        -segmentWidth + totalTravel * progress;
+    final startX = -segmentWidth + totalTravel * progress;
 
     final gradient = const LinearGradient(
-      colors: [
-        Color(0x00833AB4),
-        Color(0xFFE1306C),
-        Color(0x00FB5607),
-      ],
+      colors: [shimmerPurpleStart, shimmerPinkCenter, shimmerOrangeEnd],
     ).createShader(
-      Rect.fromLTWH(
-        startX,
-        0,
-        segmentWidth,
-        size.height,
-      ),
+      Rect.fromLTWH(startX, 0, segmentWidth, size.height),
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(
-        startX,
-        0,
-        segmentWidth,
-        size.height,
-      ),
+      Rect.fromLTWH(startX, 0, segmentWidth, size.height),
       Paint()..shader = gradient,
     );
   }
 
   @override
-  bool shouldRepaint(_LoadingBarPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(_LoadingBarPainter old) => old.progress != progress;
 }
 
-/// Minimal buffering indicator — a thin gradient
-/// bar at the top shown during mid-playback buffering.
-class VideoFeedViewBufferingIndicator
-    extends StatefulWidget {
+class VideoFeedViewBufferingIndicator extends StatefulWidget {
   const VideoFeedViewBufferingIndicator({super.key});
 
   @override
@@ -301,7 +243,7 @@ class _VideoFeedViewBufferingIndicatorState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 1200),
+      duration: AppDurations.bufferingBar,
     )..repeat();
   }
 
@@ -322,9 +264,7 @@ class _VideoFeedViewBufferingIndicatorState
         animation: _controller,
         builder: (context, _) {
           return CustomPaint(
-            painter: _BufferingBarPainter(
-              progress: _controller.value,
-            ),
+            painter: _BufferingBarPainter(progress: _controller.value),
           );
         },
       ),
@@ -339,9 +279,7 @@ class _BufferingBarPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final segmentWidth = size.width * 0.3;
-    final startX =
-        (size.width + segmentWidth) * progress -
-            segmentWidth;
+    final startX = (size.width + segmentWidth) * progress - segmentWidth;
 
     final gradient = const LinearGradient(
       colors: [
@@ -351,26 +289,15 @@ class _BufferingBarPainter extends CustomPainter {
         Color(0x00FB5607),
       ],
     ).createShader(
-      Rect.fromLTWH(
-        startX,
-        0,
-        segmentWidth,
-        size.height,
-      ),
+      Rect.fromLTWH(startX, 0, segmentWidth, size.height),
     );
 
     canvas.drawRect(
-      Rect.fromLTWH(
-        startX,
-        0,
-        segmentWidth,
-        size.height,
-      ),
+      Rect.fromLTWH(startX, 0, segmentWidth, size.height),
       Paint()..shader = gradient,
     );
   }
 
   @override
-  bool shouldRepaint(_BufferingBarPainter old) =>
-      old.progress != progress;
+  bool shouldRepaint(_BufferingBarPainter old) => old.progress != progress;
 }

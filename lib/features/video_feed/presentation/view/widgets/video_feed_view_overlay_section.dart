@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_interaction_buttons.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_user_info_section.dart';
 
@@ -39,7 +40,7 @@ class _VideoFeedViewOverlaySectionState
     super.initState();
     _controller = AnimationController(
       vsync: this,
-      duration: const Duration(milliseconds: 600),
+      duration: AppDurations.overlayAnimation,
     );
     _userInfoAnim = CurvedAnimation(
       parent: _controller,
