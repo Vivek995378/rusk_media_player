@@ -122,6 +122,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
         controller.value.isInitialized &&
         !controller.value.isPlaying) {
       try {
+        await controller.setVolume(VideoFeedViewVolumeGesture.globalVolume);
         await controller.play();
       } catch (e) {
         debugPrint('Error playing video: $e');
