@@ -242,7 +242,7 @@ class _PremiumParticlePainter extends CustomPainter {
         final y = 1.0 -
             (progress * speed + x + sin(progress * pi * 2) * 0.05) % 1.0;
         final paint = Paint()
-          ..color = Colors.pink.withValues(alpha: opacityBase);
+          ..color = accentPink.withValues(alpha: opacityBase);
         canvas.drawCircle(
           Offset(x * size.width, y * size.height),
           1.5 + layer * 1.5,
@@ -283,7 +283,7 @@ class _LoadingBarPainter extends CustomPainter {
     final segmentWidth = size.width * 0.35;
     final startX = -segmentWidth + (size.width + segmentWidth) * progress;
     final gradient = const LinearGradient(
-      colors: [transparent, Colors.pink, Colors.orange, transparent],
+      colors: [transparent, accentPink, accentOrange, transparent],
     ).createShader(Rect.fromLTWH(startX, 0, segmentWidth, size.height));
     canvas.drawRect(
       Rect.fromLTWH(startX, 0, segmentWidth, size.height),

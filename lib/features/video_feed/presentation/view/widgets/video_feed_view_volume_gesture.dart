@@ -157,7 +157,7 @@ class _VolumeBar extends StatelessWidget {
               children: [
                 Container(
                   decoration: BoxDecoration(
-                    color: Colors.white24,
+                    color: white.withValues(alpha: 0.24),
                     borderRadius: context.radiusAll(2),
                   ),
                 ),

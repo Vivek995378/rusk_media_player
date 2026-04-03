@@ -18,8 +18,7 @@ class VideoFeedViewDescriptionText extends StatelessWidget {
 
     return AppText(
       displayText,
-      style: AppTextStyle.bodyMedium,
-      color: white.withValues(alpha: 0.9),
+      color: white,
       shadows: [
         Shadow(
           color: black.withValues(alpha: 0.6),

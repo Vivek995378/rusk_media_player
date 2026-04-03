@@ -193,7 +193,7 @@ class _PaywallCard extends StatelessWidget {
           const AppText(
             AppStrings.paywallTitle,
             style: AppTextStyle.headlineSmall,
-            color: white,
+            color: MENeutralColors.neutral300,
           ),
           context.hSpace(10),
           AppText(
@@ -288,9 +288,10 @@ class _ShimmerCtaButtonState extends State<_ShimmerCtaButton>
               width: double.infinity,
               padding: context.paddingVertical(16),
               alignment: Alignment.center,
-              child: AppText(
+              child: const AppText(
                 AppStrings.paywallCta,
                 style: AppTextStyle.titleMedium,
+                color: MEBrandColors.primary50,
                 letterSpacing: 0.5,
               ),
             ),

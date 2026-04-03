@@ -83,7 +83,8 @@ class _VideoFeedViewFollowButtonState extends State<VideoFeedViewFollowButton>
           ),
           child: AppText(
             _isFollowing ? AppStrings.followingLabel : AppStrings.followLabel,
-            style: AppTextStyle.labelMedium,
+            style: AppTextStyle.titleSmall,
+            color: MENeutralColors.neutral0,
           ),
         ),
       ),

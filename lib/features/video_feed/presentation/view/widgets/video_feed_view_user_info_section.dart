@@ -21,7 +21,7 @@ class VideoFeedViewUserInfoSection extends StatelessWidget {
         left: context.w(16),
         right: context.w(16),
         top: context.h(16),
-        bottom: context.h(80),
+        bottom: context.h(40),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,

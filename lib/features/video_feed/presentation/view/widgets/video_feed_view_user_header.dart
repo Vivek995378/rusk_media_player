@@ -25,27 +25,15 @@ class VideoFeedViewUserHeader extends StatelessWidget {
             shape: BoxShape.circle,
             gradient: brandGradient,
           ),
-          child: Container(
-            padding: context.paddingAll(AppSizes.avatarRingPadding),
-            decoration: const BoxDecoration(
-              shape: BoxShape.circle,
-              color: black,
-            ),
-            child: CircleAvatar(
-              radius: context.sq(AppSizes.avatarRadius),
-              backgroundImage: NetworkImage(profileImageUrl),
-            ),
+          child: CircleAvatar(
+            radius: context.sq(AppSizes.avatarRadius),
+            backgroundImage: NetworkImage(profileImageUrl),
           ),
         ),
         AppText(
           username,
-          style: AppTextStyle.titleMedium,
-          shadows: [
-            Shadow(
-              color: black.withValues(alpha: 0.5),
-              blurRadius: 4,
-            ),
-          ],
+          style: AppTextStyle.titleLarge,
+          color: MENeutralColors.neutral0,
         ),
         const VideoFeedViewFollowButton(),
       ],
