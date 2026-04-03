@@ -2,6 +2,7 @@ import 'dart:math';
 import 'dart:ui';
 
 import 'package:flutter/material.dart';
+import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/robot_eyes_loader.dart';
 
 class VideoFeedPremiumLoader extends StatefulWidget {
   const VideoFeedPremiumLoader({super.key});
@@ -13,25 +14,94 @@ class VideoFeedPremiumLoader extends StatefulWidget {
 class _VideoFeedPremiumLoaderState extends State<VideoFeedPremiumLoader>
     with TickerProviderStateMixin {
   late AnimationController _mainController;
+  late AnimationController _typewriterController;
+  late AnimationController _messageFadeController;
 
-  final List<String> messages = [
-    'Preparing your experience ✨',
-    'Buffering magic...',
-    'Almost there 👀',
+  int _currentMessageIndex = 0;
+  String _displayedText = '';
+  bool _isDeleting = false;
+
+  final List<_LoaderMessage> _messages = [
+    const _LoaderMessage(
+      icon: '',
+      text: 'Curating your feed...',
+      subtext: '',
+    ),
+    const _LoaderMessage(
+      icon: '',
+      text: 'Boosting stream quality',
+      subtext: '',
+    ),
+    const _LoaderMessage(
+      icon: '',
+      text: 'Personalising for you',
+      subtext: '',
+    ),
+    const _LoaderMessage(
+      icon: '',
+      text: 'Almost live!',
+      subtext: '',
+    ),
   ];
 
   @override
   void initState() {
     super.initState();
+
     _mainController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 4),
     )..repeat();
+
+    _typewriterController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 60),
+    );
+
+    _messageFadeController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 400),
+    )..value = 1.0;
+
+    _startTypewriter();
+  }
+
+  void _startTypewriter() async {
+    while (mounted) {
+      final fullText = _messages[_currentMessageIndex].text;
+
+      // Type out
+      _isDeleting = false;
+      for (int i = 0; i <= fullText.length; i++) {
+        if (!mounted) return;
+        setState(() => _displayedText = fullText.substring(0, i));
+        await Future.delayed(const Duration(milliseconds: 55));
+      }
+
+      // Pause at full text
+      await Future.delayed(const Duration(milliseconds: 1800));
+      if (!mounted) return;
+
+      // Fade out
+      await _messageFadeController.reverse();
+      if (!mounted) return;
+
+      // Delete instantly, move to next message
+      setState(() {
+        _displayedText = '';
+        _currentMessageIndex = (_currentMessageIndex + 1) % _messages.length;
+      });
+
+      // Fade in
+      await _messageFadeController.forward();
+    }
   }
 
   @override
   void dispose() {
     _mainController.dispose();
+    _typewriterController.dispose();
+    _messageFadeController.dispose();
     super.dispose();
   }
 
@@ -75,34 +145,124 @@ class _VideoFeedPremiumLoaderState extends State<VideoFeedPremiumLoader>
               ),
             ),
             Center(child: _PlayButton(progress: progress)),
+
+            // ── Typewriter message block ──
             Positioned(
-              bottom: 120,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Opacity(
-                  opacity: 0.6 + 0.4 * sin(progress * pi * 2),
-                  child: Text(
-                    messages[(progress * messages.length).floor() %
-                        messages.length],
-                    style: const TextStyle(
-                      color: Colors.white,
-                      fontSize: 14,
-                      letterSpacing: 1.5,
+              bottom: 100,
+              left: 24,
+              right: 24,
+              child: FadeTransition(
+                opacity: _messageFadeController,
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Icon + typing text row
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          _messages[_currentMessageIndex].icon,
+                          style: const TextStyle(fontSize: 16),
+                        ),
+                        const SizedBox(width: 8),
+                        Text(
+                          _displayedText,
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 15,
+                            fontWeight: FontWeight.w600,
+                            letterSpacing: 0.4,
+                          ),
+                        ),
+                        // Blinking cursor
+                        _BlinkingCursor(),
+                      ],
                     ),
-                  ),
+                    const SizedBox(height: 6),
+                    // Subtext — fades in after main text is done
+                    AnimatedOpacity(
+                      opacity: _displayedText ==
+                          _messages[_currentMessageIndex].text
+                          ? 0.5
+                          : 0.0,
+                      duration: const Duration(milliseconds: 400),
+                      child: Text(
+                        _messages[_currentMessageIndex].subtext,
+                        textAlign: TextAlign.center,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 12,
+                          letterSpacing: 0.3,
+                          fontWeight: FontWeight.w300,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
+
             Positioned(
-              left: 40,
-              right: 40,
-              bottom: 80,
+              left: 0,
+              right: 0,
+              bottom: 0,
               child: _LoadingBar(progress: progress),
             ),
           ],
         );
       },
+    );
+  }
+}
+
+class _LoaderMessage {
+  const _LoaderMessage({
+    required this.icon,
+    required this.text,
+    required this.subtext,
+  });
+
+  final String icon;
+  final String text;
+  final String subtext;
+}
+
+class _BlinkingCursor extends StatefulWidget {
+  @override
+  State<_BlinkingCursor> createState() => _BlinkingCursorState();
+}
+
+class _BlinkingCursorState extends State<_BlinkingCursor>
+    with SingleTickerProviderStateMixin {
+  late AnimationController _cursorController;
+
+  @override
+  void initState() {
+    super.initState();
+    _cursorController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 500),
+    )..repeat(reverse: true);
+  }
+
+  @override
+  void dispose() {
+    _cursorController.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FadeTransition(
+      opacity: _cursorController,
+      child: const Text(
+        '|',
+        style: TextStyle(
+          color: Color(0xFFFF3D00),
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+        ),
+      ),
     );
   }
 }
@@ -120,25 +280,7 @@ class _PlayButton extends StatelessWidget {
       angle: rotation,
       child: Transform.scale(
         scale: pulse,
-        child: Container(
-          width: 80,
-          height: 80,
-          decoration: BoxDecoration(
-            shape: BoxShape.circle,
-            color: Colors.white.withValues(alpha: 0.08),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.pink.withValues(alpha: 0.4),
-                blurRadius: 30 + pulse * 20,
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.play_arrow_rounded,
-            color: Colors.white,
-            size: 40,
-          ),
-        ),
+        child: const RobotEyesLoader(),
       ),
     );
   }
@@ -202,7 +344,12 @@ class _LoadingBarPainter extends CustomPainter {
     final segmentWidth = size.width * 0.35;
     final startX = -segmentWidth + (size.width + segmentWidth) * progress;
     final gradient = const LinearGradient(
-      colors: [Colors.transparent, Colors.pink, Colors.orange, Colors.transparent],
+      colors: [
+        Colors.transparent,
+        Colors.pink,
+        Colors.orange,
+        Colors.transparent
+      ],
     ).createShader(Rect.fromLTWH(startX, 0, segmentWidth, size.height));
     canvas.drawRect(
       Rect.fromLTWH(startX, 0, segmentWidth, size.height),
