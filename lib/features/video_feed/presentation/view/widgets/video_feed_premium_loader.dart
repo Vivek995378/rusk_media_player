@@ -134,8 +134,8 @@ class _VideoFeedPremiumLoaderState extends State<VideoFeedPremiumLoader>
                       children: [
                         AppText(
                           _displayedText,
-                          style: AppTextStyle.bodyMedium,
                           fontWeight: FontWeight.w600,
+                          color: white,
                           letterSpacing: 0.4,
                         ),
                         const _BlinkingCursor(),
