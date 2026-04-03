@@ -22,17 +22,26 @@ class _VideoFeedViewState extends State<VideoFeedView>
     with WidgetsBindingObserver {
   List<VideoEntity> _videos = [];
   int _currentPage = 0;
-  final PreloadPageController _pageController = PreloadPageController();
+  late PreloadPageController _pageController;
   bool _isAppActive = true;
+  static const int _loopMultiplier = 10000;
   final Map<String, VideoPlayerController> _controllerCache = {};
   final List<String> _accessOrder = [];
   final Set<String> _disposingControllers = {};
   final Set<String> _initializingControllers = {};
   bool _isTransitioning = false;
 
+  int _getActualIndex(int pageIndex) {
+    if (_videos.isEmpty) return 0;
+    return pageIndex % _videos.length;
+  }
+
+  int get _initialPage => _videos.isEmpty ? 0 : (_loopMultiplier ~/ 2) * _videos.length;
+
   @override
   void initState() {
     super.initState();
+    _pageController = PreloadPageController();
     WidgetsBinding.instance.addObserver(this);
     _initializeFirstVideos();
   }
@@ -60,6 +69,8 @@ class _VideoFeedViewState extends State<VideoFeedView>
       final state = context.read<VideoFeedCubit>().state;
       if (state.videos.isNotEmpty) {
         setState(() => _videos = state.videos);
+        _pageController.dispose();
+        _pageController = PreloadPageController(initialPage: _initialPage);
         await _preloadInitialControllers();
         await _playController(_videos[0].id);
         if (mounted) setState(() {});
@@ -77,16 +88,17 @@ class _VideoFeedViewState extends State<VideoFeedView>
   }
 
   Future<void> _cleanupAndReinitializeCurrentVideo() async {
-    if (_videos.isEmpty || _currentPage >= _videos.length) return;
+    if (_videos.isEmpty) return;
     await _pauseAllControllers();
-    final videoId = _videos[_currentPage].id;
+    final actualPage = _getActualIndex(_currentPage);
+    final videoId = _videos[actualPage].id;
     final controller = _getController(videoId);
     if (controller != null &&
         (controller.value.hasError || !controller.value.isInitialized)) {
       await _removeController(videoId);
       await Future<void>.delayed(AppDurations.controllerCleanupDelay);
     }
-    await _getOrCreateController(_videos[_currentPage]);
+    await _getOrCreateController(_videos[actualPage]);
     await _playController(videoId);
     if (mounted) setState(() {});
   }
@@ -196,10 +208,11 @@ class _VideoFeedViewState extends State<VideoFeedView>
   }
 
   void _enforceCacheLimit() {
+    final actualPage = _getActualIndex(_currentPage);
     while (_controllerCache.length > AppSizes.maxControllerCache &&
         _accessOrder.isNotEmpty) {
       final oldestId = _accessOrder.first;
-      if (oldestId != _videos[_currentPage].id) {
+      if (oldestId != _videos[actualPage].id) {
         _removeController(oldestId);
       } else {
         _accessOrder
@@ -219,28 +232,29 @@ class _VideoFeedViewState extends State<VideoFeedView>
 
   void _preloadAdjacentControllers(int currentPage) {
     if (_videos.isEmpty) return;
-    final nextIndex = currentPage + 1;
-    final prevIndex = currentPage - 1;
-    if (nextIndex < _videos.length &&
-        !_controllerCache.containsKey(_videos[nextIndex].id)) {
+    final nextIndex = (currentPage + 1) % _videos.length;
+    final prevIndex = (currentPage - 1 + _videos.length) % _videos.length;
+    if (!_controllerCache.containsKey(_videos[nextIndex].id)) {
       _getOrCreateController(_videos[nextIndex]);
     }
-    if (prevIndex >= 0 && !_controllerCache.containsKey(_videos[prevIndex].id)) {
+    if (!_controllerCache.containsKey(_videos[prevIndex].id)) {
       _getOrCreateController(_videos[prevIndex]);
     }
   }
 
   void _handlePageChange(int newPage) {
-    if (_videos.isEmpty || newPage >= _videos.length || _isTransitioning) return;
+    if (_videos.isEmpty || _isTransitioning) return;
 
-    final previousPage = _currentPage;
-    if (newPage == previousPage) return;
+    final actualNewPage = _getActualIndex(newPage);
+    final actualPreviousPage = _getActualIndex(_currentPage);
+
+    if (actualNewPage == actualPreviousPage) return;
 
     _isTransitioning = true;
     _currentPage = newPage;
 
-    final previousVideoId = _videos[previousPage].id;
-    final currentVideoId = _videos[newPage].id;
+    final previousVideoId = _videos[actualPreviousPage].id;
+    final currentVideoId = _videos[actualNewPage].id;
 
     _pauseController(previousVideoId);
 
@@ -250,9 +264,9 @@ class _VideoFeedViewState extends State<VideoFeedView>
       _isTransitioning = false;
       if (mounted) setState(() {});
     } else {
-      _getOrCreateController(_videos[newPage]).then((controller) {
+      _getOrCreateController(_videos[actualNewPage]).then((controller) {
         if (!mounted) return;
-        if (controller != null && _currentPage == newPage) {
+        if (controller != null && _getActualIndex(_currentPage) == actualNewPage) {
           _playController(currentVideoId);
         }
         _isTransitioning = false;
@@ -262,9 +276,9 @@ class _VideoFeedViewState extends State<VideoFeedView>
 
     SchedulerBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      _preloadAdjacentControllers(newPage);
-      context.read<VideoFeedCubit>().onPageChanged(newPage);
-      _cleanupDistantControllers(newPage);
+      _preloadAdjacentControllers(actualNewPage);
+      context.read<VideoFeedCubit>().onPageChanged(actualNewPage);
+      _cleanupDistantControllers(actualNewPage);
     });
   }
 
@@ -298,22 +312,25 @@ class _VideoFeedViewState extends State<VideoFeedView>
           final hadNoVideos = _videos.isEmpty;
           setState(() => _videos = state.videos);
           if (hadNoVideos && _videos.isNotEmpty) {
+            _pageController.dispose();
+            _pageController = PreloadPageController(initialPage: _initialPage);
             _preloadInitialControllers();
           }
         },
         child: PreloadPageView.builder(
           scrollDirection: Axis.vertical,
           controller: _pageController,
-          itemCount: _videos.length,
-          preloadPagesCount: 6,
+          itemCount: _videos.isEmpty ? 0 : _videos.length * _loopMultiplier,
+          preloadPagesCount: 2,
           physics: const VideoFeedViewSnapPhysics(),
           onPageChanged: _handlePageChange,
           itemBuilder: (context, index) {
+            final actualIndex = _getActualIndex(index);
             return RepaintBoundary(
               child: VideoFeedViewItem(
-                key: ValueKey(_videos[index].id),
-                controller: _getController(_videos[index].id),
-                videoItem: _videos[index],
+                key: ValueKey('${_videos[actualIndex].id}_$index'),
+                controller: _getController(_videos[actualIndex].id),
+                videoItem: _videos[actualIndex],
               ),
             );
           },

@@ -241,6 +241,7 @@ class _VolumeBar extends StatelessWidget {
           AppText(
             '${(volume * 100).round()}',
             style: AppTextStyle.labelSmall,
+            color: white,
           ),
         ],
       ),
