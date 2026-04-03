@@ -153,44 +153,44 @@ class _VideoFeedViewFeatureHintsState extends State<VideoFeedViewFeatureHints>
             child: ColoredBox(
               color: black.withValues(alpha: 0.65),
               child: SizedBox.expand(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(
-                    horizontal: context.w(32),
-                  ),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                    _HintRow(
-                      animation: _hint1Controller,
-                      icon: _TapIcon(controller: _tapPulseController),
-                      label: 'Tap to play / pause',
+                child: Center(
+                  child: ConstrainedBox(
+                    constraints: BoxConstraints(maxWidth: context.w(320)),
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      crossAxisAlignment: CrossAxisAlignment.center,
+                      children: [
+                        _HintRow(
+                          animation: _hint1Controller,
+                          icon: _TapIcon(controller: _tapPulseController),
+                          label: 'Tap to play / pause',
+                        ),
+                        context.hSpace(16),
+                        _HintRow(
+                          animation: _hint2Controller,
+                          icon: _DoubleTapIcon(controller: _doubleTapController),
+                          label: 'Double tap to like',
+                        ),
+                        context.hSpace(16),
+                        _HintRow(
+                          animation: _hint3Controller,
+                          icon: _DragIcon(controller: _dragLoopController),
+                          label: 'Hold & drag for volume',
+                        ),
+                        context.hSpace(16),
+                        _HintRow(
+                          animation: _hint4Controller,
+                          icon: _SwipeIcon(controller: _swipeLoopController),
+                          label: 'Swipe up / down for videos',
+                        ),
+                        context.hSpace(16),
+                        _HintRow(
+                          animation: _hint5Controller,
+                          icon: _SeekIcon(controller: _seekLoopController),
+                          label: 'Hold & drag sideways to seek',
+                        ),
+                      ],
                     ),
-                    context.hSpace(36),
-                    _HintRow(
-                      animation: _hint2Controller,
-                      icon: _DoubleTapIcon(controller: _doubleTapController),
-                      label: 'Double tap to like',
-                    ),
-                    context.hSpace(36),
-                    _HintRow(
-                      animation: _hint3Controller,
-                      icon: _DragIcon(controller: _dragLoopController),
-                      label: 'Hold & drag for volume',
-                    ),
-                    context.hSpace(36),
-                    _HintRow(
-                      animation: _hint4Controller,
-                      icon: _SwipeIcon(controller: _swipeLoopController),
-                      label: 'Swipe up / down for videos',
-                    ),
-                    context.hSpace(36),
-                    _HintRow(
-                      animation: _hint5Controller,
-                      icon: _SeekIcon(controller: _seekLoopController),
-                      label: 'Hold & drag sideways to seek',
-                    ),
-                    ],
                   ),
                 ),
               ),
@@ -220,28 +220,52 @@ class _HintRow extends StatelessWidget {
       builder: (context, _) {
         final t = CurvedAnimation(
           parent: animation,
-          curve: Curves.easeOutBack,
+          curve: Curves.easeOutCubic,
         ).value;
+
         return Opacity(
-          opacity: t.clamp(0.0, 1.0),
+          opacity: t,
           child: Transform.translate(
-            offset: Offset(0, context.h(30) * (1 - t)),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                SizedBox(
-                  width: context.sq(48),
-                  height: context.sq(48),
-                  child: icon,
+            offset: Offset(0, context.h(20) * (1 - t)),
+            child: Container(
+              width: double.infinity,
+              padding: EdgeInsets.symmetric(
+                horizontal: context.w(14),
+                vertical: context.h(12),
+              ),
+              decoration: BoxDecoration(
+                color: Colors.black.withValues(alpha: 0.4),
+                borderRadius: context.radiusAll(14),
+                border: Border.all(
+                  color: white.withValues(alpha: 0.08),
                 ),
-                SizedBox(width: context.w(14)),
-                AppText(
-                  label,
-                  style: AppTextStyle.titleMedium,
-                  color: white.withValues(alpha: 0.9),
-                  letterSpacing: 0.3,
-                ),
-              ],
+              ),
+              child: Row(
+                children: [
+                  /// FIXED ICON CONTAINER
+                  Container(
+                    width: context.sq(42),
+                    height: context.sq(42),
+                    alignment: Alignment.center,
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: white.withValues(alpha: 0.06),
+                    ),
+                    child: icon,
+                  ),
+
+                  context.wSpace(14),
+
+                  /// TEXT
+                  Expanded(
+                    child: AppText(
+                      label,
+                      style: AppTextStyle.titleMedium,
+                      color: white.withValues(alpha: 0.95),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         );
