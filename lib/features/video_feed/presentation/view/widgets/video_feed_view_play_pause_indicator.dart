@@ -18,53 +18,41 @@ class VideoFeedViewPlayPauseIndicatorState
   AnimationController? _controller;
   late Animation<double> _scale;
   late Animation<double> _opacity;
+  late Animation<double> _pulse;
+
   bool _isPlaying = true;
   bool _visible = false;
 
   void show({required bool isPlaying}) {
     _isPlaying = isPlaying;
     _visible = true;
+
     _controller?.dispose();
     _controller = AnimationController(
       vsync: this,
       duration: AppDurations.playPauseIndicator,
     );
-    _scale = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.3, end: 1.15)
-            .chain(CurveTween(curve: Curves.easeOutBack)),
-        weight: 45,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1.15, end: 1)
-            .chain(CurveTween(curve: Curves.easeInOut)),
-        weight: 15,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 1, end: 0.8)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 40,
-      ),
-    ]).animate(_controller!);
-    _opacity = TweenSequence<double>([
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0, end: 0.9)
-            .chain(CurveTween(curve: Curves.easeOut)),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: ConstantTween<double>(0.9),
-        weight: 30,
-      ),
-      TweenSequenceItem(
-        tween: Tween<double>(begin: 0.9, end: 0)
-            .chain(CurveTween(curve: Curves.easeIn)),
-        weight: 40,
-      ),
-    ]).animate(_controller!);
+
+    _scale = Tween<double>(begin: 0.6, end: 1).animate(
+      CurvedAnimation(parent: _controller!, curve: Curves.easeOutCubic),
+    );
+
+    _opacity = Tween<double>(begin: 0, end: 1).animate(
+      CurvedAnimation(parent: _controller!, curve: Curves.easeOut),
+    );
+
+    _pulse = Tween<double>(begin: 1, end: 1.15).animate(
+      CurvedAnimation(parent: _controller!, curve: Curves.easeOut),
+    );
+
     setState(() {});
-    _controller!.forward().then((_) {
-      if (mounted) setState(() => _visible = false);
+
+    _controller!.forward().then((_) async {
+      await Future<void>.delayed(const Duration(milliseconds: 200));
+      if (mounted) {
+        await _controller!.reverse();
+        setState(() => _visible = false);
+      }
     });
   }
 
@@ -76,39 +64,60 @@ class VideoFeedViewPlayPauseIndicatorState
 
   @override
   Widget build(BuildContext context) {
-    if (!_visible || _controller == null) return const SizedBox.shrink();
+    if (!_visible || _controller == null) {
+      return const SizedBox.shrink();
+    }
+
     return Center(
       child: AnimatedBuilder(
         animation: _controller!,
         builder: (context, _) {
           return Opacity(
-            opacity: _opacity.value.clamp(0.0, 1.0),
+            opacity: _opacity.value.clamp(0, 1),
             child: Transform.scale(
-              scale: _scale.value.clamp(0.0, 2.0),
-              child: Container(
-                width: context.sq(AppSizes.playPauseContainerSize),
-                height: context.sq(AppSizes.playPauseContainerSize),
-                decoration: BoxDecoration(
-                  shape: BoxShape.circle,
-                  gradient: RadialGradient(
-                    colors: _isPlaying
-                        ? [playGreen, playGreenDark, playGreenDarkest]
-                        : [accentPink, heartPink, pauseRed],
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: (_isPlaying ? playGreen : accentPink)
-                          .withValues(alpha: 0.5),
-                      blurRadius: context.sq(30),
-                      spreadRadius: context.sq(5),
+              scale: _scale.value,
+              child: Stack(
+                alignment: Alignment.center,
+                children: [
+                  /// 🔥 Ripple pulse (subtle premium effect)
+                  Transform.scale(
+                    scale: _pulse.value,
+                    child: Container(
+                      width: context.sq(AppSizes.playPauseContainerSize),
+                      height: context.sq(AppSizes.playPauseContainerSize),
+                      decoration: BoxDecoration(
+                        shape: BoxShape.circle,
+                        color: white.withValues(alpha: 0.08),
+                      ),
                     ),
-                  ],
-                ),
-                child: Icon(
-                  _isPlaying ? Icons.play_arrow_rounded : Icons.pause_rounded,
-                  color: white,
-                  size: context.sq(AppSizes.playPauseIconSize),
-                ),
+                  ),
+
+                  /// 🎯 Main container (clean glass style)
+                  Container(
+                    width: context.sq(AppSizes.playPauseContainerSize),
+                    height: context.sq(AppSizes.playPauseContainerSize),
+                    decoration: BoxDecoration(
+                      shape: BoxShape.circle,
+                      color: Colors.black.withValues(alpha: 0.55),
+                      border: Border.all(
+                        color: white.withValues(alpha: 0.2),
+                      ),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.4),
+                          blurRadius: context.sq(20),
+                        ),
+                      ],
+                    ),
+                    child: Icon(
+                      _isPlaying
+                          ? Icons.pause_rounded
+                          : Icons.play_arrow_rounded,
+                      color: white,
+                      size: context.sq(AppSizes.playPauseIconSize),
+                    ),
+                  ),
+                ],
               ),
             ),
           );

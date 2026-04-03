@@ -60,6 +60,14 @@ class _VideoFeedViewInteractionButtonState
   }
 
   @override
+  void didUpdateWidget(VideoFeedViewInteractionButton oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.icon != widget.icon || oldWidget.color != widget.color) {
+      _controller.forward(from: 0);
+    }
+  }
+
+  @override
   Widget build(BuildContext context) {
     return GestureDetector(
       onTap: () {
