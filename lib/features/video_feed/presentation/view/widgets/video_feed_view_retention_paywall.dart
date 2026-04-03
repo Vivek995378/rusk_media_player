@@ -190,9 +190,10 @@ class _PaywallCard extends StatelessWidget {
             ),
           ),
           context.hSpace(20),
-          AppText(
+          const AppText(
             AppStrings.paywallTitle,
             style: AppTextStyle.headlineSmall,
+            color: white,
           ),
           context.hSpace(10),
           AppText(
