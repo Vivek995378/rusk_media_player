@@ -23,6 +23,7 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
   final _preloadQueue = Queue<String>();
   final _preloadedFiles = <String, File>{};
   bool _isPreloadingMore = false;
+  static const _maxPreloadedFiles = 10;
 
   void toggleLike(String videoId) {
     final updated = Set<String>.from(state.likedVideoIds);
@@ -111,6 +112,7 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
     try {
       final file = await getCachedVideoFile(videoUrl);
       _preloadedFiles[videoUrl] = file;
+      _evictOldPreloads();
       final currentPreloaded = Set<String>.from(state.preloadedVideoUrls)
         ..add(videoUrl);
       emit(state.copyWith(preloadedVideoUrls: currentPreloaded));
@@ -118,6 +120,13 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
       debugPrint('Error preloading video: $e');
     } finally {
       _preloadQueue.remove(videoUrl);
+    }
+  }
+
+  void _evictOldPreloads() {
+    while (_preloadedFiles.length > _maxPreloadedFiles) {
+      final oldest = _preloadedFiles.keys.first;
+      _preloadedFiles.remove(oldest);
     }
   }
 

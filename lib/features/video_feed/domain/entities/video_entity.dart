@@ -27,6 +27,34 @@ class VideoEntity extends Equatable {
   final bool isLiked;
   final bool isBookmarked;
 
+  VideoEntity copyWith({
+    String? id,
+    String? username,
+    String? description,
+    String? videoUrl,
+    String? profileImageUrl,
+    int? likeCount,
+    int? commentCount,
+    int? shareCount,
+    DateTime? timestamp,
+    bool? isLiked,
+    bool? isBookmarked,
+  }) {
+    return VideoEntity(
+      id: id ?? this.id,
+      username: username ?? this.username,
+      description: description ?? this.description,
+      videoUrl: videoUrl ?? this.videoUrl,
+      profileImageUrl: profileImageUrl ?? this.profileImageUrl,
+      likeCount: likeCount ?? this.likeCount,
+      commentCount: commentCount ?? this.commentCount,
+      shareCount: shareCount ?? this.shareCount,
+      timestamp: timestamp ?? this.timestamp,
+      isLiked: isLiked ?? this.isLiked,
+      isBookmarked: isBookmarked ?? this.isBookmarked,
+    );
+  }
+
   @override
   List<Object?> get props => [
         id, username, description, videoUrl, profileImageUrl,

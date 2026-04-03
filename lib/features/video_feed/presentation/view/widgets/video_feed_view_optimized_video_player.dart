@@ -54,8 +54,9 @@ class _VideoFeedViewOptimizedVideoPlayerState
     final controllerChanged =
         widget.controller != _oldController;
     if (videoIdChanged || controllerChanged) {
-      _oldController
-          ?.removeListener(_onControllerUpdate);
+      try {
+        _oldController?.removeListener(_onControllerUpdate);
+      } catch (_) {}
       _oldController = widget.controller;
       _currentVideoId = widget.videoId;
       _playerKey = UniqueKey();
@@ -77,7 +78,9 @@ class _VideoFeedViewOptimizedVideoPlayerState
 
   @override
   void dispose() {
-    _oldController?.removeListener(_onControllerUpdate);
+    try {
+      _oldController?.removeListener(_onControllerUpdate);
+    } catch (_) {}
     _oldController = null;
     super.dispose();
   }

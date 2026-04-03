@@ -2,10 +2,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:preload_page_view/preload_page_view.dart';
 import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
-import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/features/video_feed/domain/entities/video_entity.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_cubit.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
+import 'package:rusk_media_player/features/video_feed/presentation/view/video_controller_manager.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_item.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_snap_physics.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_volume_gesture.dart';
@@ -23,9 +23,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
   int _currentPage = 0;
   final PreloadPageController _pageController = PreloadPageController();
   bool _isAppActive = true;
-  final Map<String, VideoPlayerController> _controllerCache = {};
-  final List<String> _accessOrder = [];
-  final Set<String> _disposingControllers = <String>{};
+  final _controllerManager = VideoControllerManager();
 
   @override
   void initState() {
@@ -37,7 +35,8 @@ class _VideoFeedViewState extends State<VideoFeedView>
   @override
   void dispose() {
     WidgetsBinding.instance.removeObserver(this);
-    _disposeAllControllers();
+    _pageController.dispose();
+    _controllerManager.disposeAll();
     super.dispose();
   }
 
@@ -48,7 +47,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
     if (_isAppActive && !wasActive) {
       _cleanupAndReinitializeCurrentVideo();
     } else if (!_isAppActive && wasActive) {
-      _pauseAllControllers();
+      _controllerManager.pauseAll();
     }
   }
 
@@ -64,12 +63,12 @@ class _VideoFeedViewState extends State<VideoFeedView>
 
   Future<void> _cleanupAndReinitializeCurrentVideo() async {
     if (_videos.isEmpty || _currentPage >= _videos.length) return;
-    await _pauseAllControllers();
+    await _controllerManager.pauseAll();
     final videoId = _videos[_currentPage].id;
-    final controller = _getController(videoId);
+    final controller = _controllerManager.get(videoId);
     if (controller != null &&
         (controller.value.hasError || !controller.value.isInitialized)) {
-      await _removeController(videoId);
+      await _controllerManager.remove(videoId);
       await Future<void>.delayed(AppDurations.controllerCleanupDelay);
     }
     await _initAndPlayVideo(_currentPage);
@@ -79,25 +78,15 @@ class _VideoFeedViewState extends State<VideoFeedView>
     if (_videos.isEmpty || index >= _videos.length) return;
     final video = _videos[index];
     await _getOrCreateController(video);
-    await _playController(video.id);
+    await _controllerManager.play(video.id);
     if (mounted) setState(() {});
-  }
-
-  VideoPlayerController? _getController(String videoId) =>
-      _controllerCache[videoId];
-
-  void _touchController(String videoId) {
-    _accessOrder
-      ..remove(videoId)
-      ..add(videoId);
   }
 
   Future<VideoPlayerController?> _getOrCreateController(
     VideoEntity video,
   ) async {
-    if (_controllerCache.containsKey(video.id)) {
-      _touchController(video.id);
-      return _controllerCache[video.id];
+    if (_controllerManager.contains(video.id)) {
+      return _controllerManager.get(video.id);
     }
     try {
       final videoFile = await context
@@ -107,78 +96,12 @@ class _VideoFeedViewState extends State<VideoFeedView>
       await controller.initialize();
       await controller.setLooping(true);
       await controller.setVolume(VideoFeedViewVolumeGesture.globalVolume);
-      _controllerCache[video.id] = controller;
-      _touchController(video.id);
-      _enforceCacheLimit();
+      _controllerManager.put(video.id, controller);
       return controller;
     } catch (e) {
       debugPrint('Error initializing controller: $e');
       return null;
     }
-  }
-
-  Future<void> _playController(String videoId) async {
-    final controller = _controllerCache[videoId];
-    if (controller != null &&
-        controller.value.isInitialized &&
-        !controller.value.isPlaying) {
-      try {
-        await controller.setVolume(VideoFeedViewVolumeGesture.globalVolume);
-        await controller.play();
-      } catch (e) {
-        debugPrint('Error playing video: $e');
-      }
-    }
-  }
-
-  Future<void> _pauseAllControllers() async {
-    for (final controller
-        in List<VideoPlayerController>.from(_controllerCache.values)) {
-      try {
-        if (controller.value.isInitialized && controller.value.isPlaying) {
-          await controller.pause();
-          await controller.seekTo(Duration.zero);
-        }
-      } catch (e) {
-        debugPrint('Error pausing video: $e');
-      }
-    }
-  }
-
-  Future<void> _removeController(String videoId) async {
-    if (_disposingControllers.contains(videoId)) return;
-    _disposingControllers.add(videoId);
-    try {
-      final controller = _controllerCache[videoId];
-      if (controller != null) {
-        _controllerCache.remove(videoId);
-        _accessOrder.remove(videoId);
-        try {
-          if (controller.value.isInitialized) await controller.pause();
-          await controller.dispose();
-        } catch (e) {
-          debugPrint('Error disposing controller: $e');
-        }
-      }
-    } finally {
-      _disposingControllers.remove(videoId);
-    }
-  }
-
-  void _enforceCacheLimit() {
-    while (_controllerCache.length > AppSizes.maxControllerCache &&
-        _accessOrder.isNotEmpty) {
-      _removeController(_accessOrder.first);
-    }
-  }
-
-  Future<void> _disposeAllControllers() async {
-    _pageController.dispose();
-    for (final id in List<String>.from(_controllerCache.keys)) {
-      await _removeController(id);
-    }
-    _controllerCache.clear();
-    _accessOrder.clear();
   }
 
   Future<void> _manageControllerWindow(int currentPage) async {
@@ -189,10 +112,9 @@ class _VideoFeedViewState extends State<VideoFeedView>
     for (var i = windowStart; i <= windowEnd; i++) {
       if (i < _videos.length) idsToKeep.add(_videos[i].id);
     }
-    for (final id in _controllerCache.keys
-        .where((id) => !idsToKeep.contains(id))
-        .toList()) {
-      await _removeController(id);
+    for (final id
+        in _controllerManager.cachedIds.where((id) => !idsToKeep.contains(id)).toList()) {
+      await _controllerManager.remove(id);
     }
     if (currentPage < _videos.length) {
       await _getOrCreateController(_videos[currentPage]);
@@ -210,12 +132,14 @@ class _VideoFeedViewState extends State<VideoFeedView>
     final previousPage = _currentPage;
     _currentPage = newPage;
     final isFastScroll = (newPage - previousPage).abs() > 1;
-    await _pauseAllControllers();
+    await _controllerManager.pauseAll();
     try {
       if (isFastScroll) {
         final videoId = _videos[newPage].id;
-        for (final id in List<String>.from(_controllerCache.keys)) {
-          if (id != videoId) await _removeController(id);
+        for (final id in _controllerManager.cachedIds
+            .where((id) => id != videoId)
+            .toList()) {
+          await _controllerManager.remove(id);
         }
       }
       await _manageControllerWindow(newPage);
@@ -250,7 +174,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
             return RepaintBoundary(
               child: VideoFeedViewItem(
                 key: ValueKey(_videos[index].id),
-                controller: _getController(_videos[index].id),
+                controller: _controllerManager.get(_videos[index].id),
                 videoItem: _videos[index],
               ),
             );
