@@ -146,7 +146,7 @@ class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
               VideoFeedViewPlayPauseIndicator(key: _playPauseKey),
               VideoFeedViewMuteButton(controller: widget.controller),
             ],
-            if (true)
+            if (_showHints)
               Positioned.fill(
                 child: VideoFeedViewFeatureHints(
                   onDismiss: _onHintsDismissed,
