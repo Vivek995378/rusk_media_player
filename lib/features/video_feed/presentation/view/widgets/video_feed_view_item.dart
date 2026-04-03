@@ -40,7 +40,7 @@ class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
   void initState() {
     super.initState();
     if (!VideoFeedViewFeatureHints.hasShown) {
-      VideoFeedViewFeatureHints.hasShown = true;
+      VideoFeedViewFeatureHints.markShown();
       _showHints = true;
       _pauseForHints();
     }

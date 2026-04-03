@@ -5,13 +5,16 @@ import 'package:flutter/material.dart';
 import 'package:rusk_media_player/core/design_system/app_text.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
+import 'package:rusk_media_player/core/utils/helpers/local_storage.dart';
 
 class VideoFeedViewFeatureHints extends StatefulWidget {
   const VideoFeedViewFeatureHints({required this.onDismiss, super.key});
 
   final VoidCallback onDismiss;
 
-  static bool hasShown = false;
+  static bool get hasShown => LocalStorage.featureHintsShown;
+
+  static Future<void> markShown() => LocalStorage.setFeatureHintsShown();
 
   @override
   State<VideoFeedViewFeatureHints> createState() =>
