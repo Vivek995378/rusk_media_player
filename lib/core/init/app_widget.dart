@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:google_fonts/google_fonts.dart';
 import 'package:rusk_media_player/core/design_system/colors.dart';
 import 'package:rusk_media_player/core/di/dependency_injector.dart';
 import 'package:rusk_media_player/core/init/router/app_router.dart';
@@ -41,7 +42,7 @@ class _AppWidgetState extends State<AppWidget> {
         theme: ThemeData(
           brightness: Brightness.dark,
           scaffoldBackgroundColor: surfaceDark,
-          fontFamily: 'Onest',
+          textTheme: GoogleFonts.onestTextTheme(),
           colorScheme: const ColorScheme.dark(
             primary: accentPink,
           ),

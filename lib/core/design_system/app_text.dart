@@ -20,20 +20,20 @@ enum AppTextStyle {
 
 class AppText extends StatelessWidget {
   const AppText(
-    this.text, {
-    super.key,
-    this.style = AppTextStyle.bodyMedium,
-    this.color,
-    this.fontWeight,
-    this.fontSize,
-    this.letterSpacing,
-    this.height,
-    this.maxLines,
-    this.overflow,
-    this.textAlign,
-    this.shadows,
-    this.decoration,
-  });
+      this.text, {
+        super.key,
+        this.style = AppTextStyle.bodyMedium,
+        this.color,
+        this.fontWeight,
+        this.fontSize,
+        this.letterSpacing,
+        this.height,
+        this.maxLines,
+        this.overflow,
+        this.textAlign,
+        this.shadows,
+        this.decoration,
+      });
 
   final String text;
   final AppTextStyle style;
@@ -61,10 +61,12 @@ class AppText extends StatelessWidget {
 
   TextStyle _buildTextStyle(BuildContext context) {
     final baseStyle = _getBaseStyle(context);
+
     return baseStyle.copyWith(
       color: color ?? baseStyle.color,
       fontWeight: fontWeight ?? baseStyle.fontWeight,
-      fontSize: fontSize != null ? context.fontSize(fontSize!) : baseStyle.fontSize,
+      fontSize:
+      fontSize != null ? context.fontSize(fontSize!) : baseStyle.fontSize,
       letterSpacing: letterSpacing ?? baseStyle.letterSpacing,
       height: height ?? baseStyle.height,
       shadows: shadows ?? baseStyle.shadows,
@@ -73,108 +75,93 @@ class AppText extends StatelessWidget {
   }
 
   TextStyle _getBaseStyle(BuildContext context) {
+    final theme = Theme.of(context).textTheme;
+
     switch (style) {
       case AppTextStyle.headlineLarge:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.headlineLarge!.copyWith(
           fontSize: context.fontSize(36),
           fontWeight: FontWeight.w900,
-          color: white,
           letterSpacing: 0.5,
         );
+
       case AppTextStyle.headlineMedium:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.headlineMedium!.copyWith(
           fontSize: context.fontSize(28),
           fontWeight: FontWeight.w800,
-          color: white,
           letterSpacing: 0.4,
         );
+
       case AppTextStyle.headlineSmall:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.headlineSmall!.copyWith(
           fontSize: context.fontSize(22),
           fontWeight: FontWeight.w700,
-          color: white,
           letterSpacing: 0.3,
         );
+
       case AppTextStyle.titleLarge:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.titleLarge!.copyWith(
           fontSize: context.fontSize(20),
           fontWeight: FontWeight.w700,
-          color: white,
           letterSpacing: 0.2,
         );
+
       case AppTextStyle.titleMedium:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.titleMedium!.copyWith(
           fontSize: context.fontSize(16),
           fontWeight: FontWeight.bold,
-          color: white,
           letterSpacing: 0.15,
         );
+
       case AppTextStyle.titleSmall:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.titleSmall!.copyWith(
           fontSize: context.fontSize(14),
           fontWeight: FontWeight.w600,
-          color: white,
           letterSpacing: 0.1,
         );
+
       case AppTextStyle.bodyLarge:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.bodyLarge!.copyWith(
           fontSize: context.fontSize(16),
-          fontWeight: FontWeight.w400,
-          color: white,
           letterSpacing: 0.5,
         );
+
       case AppTextStyle.bodyMedium:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.bodyMedium!.copyWith(
           fontSize: context.fontSize(14),
-          fontWeight: FontWeight.w400,
-          color: white,
           letterSpacing: 0.25,
         );
+
       case AppTextStyle.bodySmall:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.bodySmall!.copyWith(
           fontSize: context.fontSize(12),
-          fontWeight: FontWeight.w400,
-          color: white,
           letterSpacing: 0.4,
         );
+
       case AppTextStyle.labelLarge:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.labelLarge!.copyWith(
           fontSize: context.fontSize(14),
           fontWeight: FontWeight.w600,
-          color: white,
           letterSpacing: 0.1,
         );
+
       case AppTextStyle.labelMedium:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.labelMedium!.copyWith(
           fontSize: context.fontSize(12),
           fontWeight: FontWeight.w600,
-          color: white,
           letterSpacing: 0.5,
         );
+
       case AppTextStyle.labelSmall:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.labelSmall!.copyWith(
           fontSize: context.fontSize(11),
           fontWeight: FontWeight.w600,
-          color: white,
           letterSpacing: 0.5,
         );
+
       case AppTextStyle.caption:
-        return TextStyle(
-          fontFamily: 'Onest',
+        return theme.bodySmall!.copyWith(
           fontSize: context.fontSize(10),
-          fontWeight: FontWeight.w400,
           color: white.withValues(alpha: 0.6),
           letterSpacing: 0.4,
         );
