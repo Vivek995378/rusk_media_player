@@ -34,6 +34,10 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
     emit(state.copyWith(likedVideoIds: updated));
   }
 
+  void setTutorialActive(bool active) {
+    emit(state.copyWith(tutorialActive: active));
+  }
+
   Future<void> loadVideos() async {
     emit(state.copyWith(isLoading: true, errorMessage: ''));
     final result = await _fetchVideosUseCase();
@@ -42,13 +46,12 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
         state.copyWith(isLoading: false, isSuccess: false, errorMessage: error),
       ),
       (videos) {
-        final hasMore = videos.length == 2;
         emit(
           state.copyWith(
             isLoading: false,
             isSuccess: true,
             videos: videos,
-            hasMoreVideos: hasMore,
+            hasMoreVideos: false, // all loaded upfront
             currentIndex: 0,
             errorMessage: '',
           ),

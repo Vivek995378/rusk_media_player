@@ -60,6 +60,19 @@ class _VideoFeedViewOverlaySectionState
 
   @override
   Widget build(BuildContext context) {
+    // Pre-build static children so AnimatedBuilder doesn't recreate them
+    final userInfoChild = VideoFeedViewUserInfoSection(
+      profileImageUrl: widget.profileImageUrl,
+      username: widget.username,
+      description: widget.description,
+    );
+    final buttonsChild = VideoFeedViewInteractionButtons(
+      isLiked: widget.isLiked,
+      onLikeTap: widget.onLikeTap,
+      onCommentTap: widget.onCommentTap,
+      onShareTap: widget.onShareTap,
+    );
+
     return RepaintBoundary(
       child: AnimatedBuilder(
         animation: _controller,
@@ -72,11 +85,7 @@ class _VideoFeedViewOverlaySectionState
                   offset: Offset(-30 * (1 - _userInfoAnim.value), 0),
                   child: Opacity(
                     opacity: _userInfoAnim.value,
-                    child: VideoFeedViewUserInfoSection(
-                      profileImageUrl: widget.profileImageUrl,
-                      username: widget.username,
-                      description: widget.description,
-                    ),
+                    child: userInfoChild,
                   ),
                 ),
               ),
@@ -84,12 +93,7 @@ class _VideoFeedViewOverlaySectionState
                 offset: Offset(30 * (1 - _buttonsAnim.value), 0),
                 child: Opacity(
                   opacity: _buttonsAnim.value,
-                  child: VideoFeedViewInteractionButtons(
-                    isLiked: widget.isLiked,
-                    onLikeTap: widget.onLikeTap,
-                    onCommentTap: widget.onCommentTap,
-                    onShareTap: widget.onShareTap,
-                  ),
+                  child: buttonsChild,
                 ),
               ),
             ],
