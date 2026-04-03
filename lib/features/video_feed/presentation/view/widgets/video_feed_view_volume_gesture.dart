@@ -4,12 +4,16 @@ import 'package:rusk_media_player/core/design_system/colors.dart';
 import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
 import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
+import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_progress_scrubber.dart';
 import 'package:video_player/video_player.dart';
+
+enum _DragMode { undecided, volume, seek }
 
 class VideoFeedViewVolumeGesture extends StatefulWidget {
   const VideoFeedViewVolumeGesture({
     required this.controller,
     required this.child,
+    required this.scrubberKey,
     super.key,
   });
 
@@ -17,6 +21,7 @@ class VideoFeedViewVolumeGesture extends StatefulWidget {
 
   final VideoPlayerController? controller;
   final Widget child;
+  final GlobalKey<VideoFeedViewProgressScrubberState> scrubberKey;
 
   @override
   State<VideoFeedViewVolumeGesture> createState() =>
@@ -27,10 +32,16 @@ class _VideoFeedViewVolumeGestureState
     extends State<VideoFeedViewVolumeGesture>
     with SingleTickerProviderStateMixin {
   bool _isDragging = false;
+  _DragMode _dragMode = _DragMode.undecided;
+  double _dragStartX = 0;
   double _dragStartY = 0;
   double _startVolume = 1;
+  double _seekStartProgress = 0;
+  bool _wasPaused = false;
   late AnimationController _fadeController;
   late Animation<double> _fadeAnimation;
+
+  static const _directionThreshold = 12.0;
 
   @override
   void initState() {
@@ -67,18 +78,53 @@ class _VideoFeedViewVolumeGestureState
     super.dispose();
   }
 
+  double get _currentProgress {
+    final ctrl = widget.controller;
+    if (ctrl == null || !ctrl.value.isInitialized) return 0;
+    final duration = ctrl.value.duration.inMilliseconds;
+    if (duration == 0) return 0;
+    return ctrl.value.position.inMilliseconds / duration;
+  }
+
   void _onLongPressStart(LongPressStartDetails details) {
     if (widget.controller == null) return;
     _isDragging = true;
+    _dragMode = _DragMode.undecided;
+    _dragStartX = details.localPosition.dx;
     _dragStartY = details.localPosition.dy;
     _startVolume = VideoFeedViewVolumeGesture.globalVolume;
-    _fadeController.forward();
+    _wasPaused = !widget.controller!.value.isPlaying;
+    _seekStartProgress = _currentProgress;
     setState(() {});
   }
 
   void _onLongPressMoveUpdate(LongPressMoveUpdateDetails details) {
     if (!_isDragging || widget.controller == null) return;
-    final dy = _dragStartY - details.localPosition.dy;
+    final dx = (details.localPosition.dx - _dragStartX).abs();
+    final dy = (details.localPosition.dy - _dragStartY).abs();
+
+    if (_dragMode == _DragMode.undecided) {
+      if (dx > _directionThreshold || dy > _directionThreshold) {
+        _dragMode = dx > dy ? _DragMode.seek : _DragMode.volume;
+        if (_dragMode == _DragMode.volume) {
+          _fadeController.forward();
+        } else {
+          widget.scrubberKey.currentState
+              ?.externalSeekStart(_seekStartProgress);
+        }
+      }
+      return;
+    }
+
+    if (_dragMode == _DragMode.volume) {
+      _handleVolumeDrag(details.localPosition.dy);
+    } else {
+      _handleSeekDrag(details.localPosition.dx);
+    }
+  }
+
+  void _handleVolumeDrag(double currentY) {
+    final dy = _dragStartY - currentY;
     final sensitivity = context.screenHeight * 0.5;
     final newVolume = (_startVolume + dy / sensitivity).clamp(0.0, 1.0);
     VideoFeedViewVolumeGesture.globalVolume = newVolume;
@@ -86,9 +132,27 @@ class _VideoFeedViewVolumeGestureState
     setState(() {});
   }
 
+  void _handleSeekDrag(double currentX) {
+    final ctrl = widget.controller!;
+    if (!ctrl.value.isInitialized || ctrl.value.duration.inMilliseconds == 0) {
+      return;
+    }
+    final screenW = context.screenWidth;
+    final dxFromStart = currentX - _dragStartX;
+    final seekDelta = dxFromStart / screenW;
+    final progress = (_seekStartProgress + seekDelta).clamp(0.0, 1.0);
+    widget.scrubberKey.currentState?.externalSeekUpdate(progress);
+  }
+
   void _onLongPressEnd(LongPressEndDetails details) {
+    if (_dragMode == _DragMode.volume) {
+      _fadeController.reverse();
+    } else if (_dragMode == _DragMode.seek) {
+      widget.scrubberKey.currentState
+          ?.externalSeekEnd(resume: !_wasPaused);
+    }
     _isDragging = false;
-    _fadeController.reverse();
+    _dragMode = _DragMode.undecided;
     setState(() {});
   }
 

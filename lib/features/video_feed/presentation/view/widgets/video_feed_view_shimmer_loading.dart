@@ -76,7 +76,7 @@ class _VideoFeedViewShimmerLoadingState
                 child: Center(
                   child: Opacity(
                     opacity: 0.3 + 0.3 * _pulseController.value,
-                    child: AppText(
+                    child: const AppText(
                       AppStrings.loading,
                       style: AppTextStyle.bodySmall,
                       letterSpacing: 2,

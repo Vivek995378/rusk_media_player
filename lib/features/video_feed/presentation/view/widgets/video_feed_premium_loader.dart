@@ -7,6 +7,7 @@ import 'package:rusk_media_player/core/design_system/colors.dart';
 import 'package:rusk_media_player/core/utils/constants/app_durations.dart';
 import 'package:rusk_media_player/core/utils/constants/app_sizes.dart';
 import 'package:rusk_media_player/core/utils/constants/app_strings.dart';
+import 'package:rusk_media_player/core/utils/extensions/context_size_extensions.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/robot_eyes_loader.dart';
 
 class VideoFeedPremiumLoader extends StatefulWidget {
@@ -121,9 +122,9 @@ class _VideoFeedPremiumLoaderState extends State<VideoFeedPremiumLoader>
             ),
             Center(child: _PlayButton(progress: progress)),
             Positioned(
-              bottom: 100,
-              left: 24,
-              right: 24,
+              bottom: context.h(100),
+              left: context.w(24),
+              right: context.w(24),
               child: FadeTransition(
                 opacity: _messageFadeController,
                 child: Column(
@@ -157,7 +158,7 @@ class _VideoFeedPremiumLoaderState extends State<VideoFeedPremiumLoader>
               left: 0,
               right: 0,
               bottom: 0,
-              child: _LoadingBar(progress: progress),
+              child: _LoadingBarWithRunner(progress: progress),
             ),
           ],
         );
@@ -256,18 +257,51 @@ class _PremiumParticlePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
 }
 
-class _LoadingBar extends StatelessWidget {
-  const _LoadingBar({required this.progress});
+class _LoadingBarWithRunner extends StatelessWidget {
+  const _LoadingBarWithRunner({required this.progress});
 
   final double progress;
 
   @override
   Widget build(BuildContext context) {
     return SizedBox(
-      height: 4,
-      child: ClipRRect(
-        borderRadius: BorderRadius.circular(2),
-        child: CustomPaint(painter: _LoadingBarPainter(progress)),
+      height: context.h(56),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          final barWidth = constraints.maxWidth;
+          final gifSize = context.sq(48);
+          final boyX =
+              (progress * barWidth - gifSize / 2).clamp(0.0, barWidth - gifSize);
+          return Stack(
+            clipBehavior: Clip.none,
+            alignment: Alignment.bottomCenter,
+            children: [
+              Positioned(
+                left: 0,
+                right: 0,
+                bottom: 0,
+                height: context.h(3),
+                child: ClipRRect(
+                  borderRadius: context.radiusAll(2),
+                  child: CustomPaint(
+                    painter: _LoadingBarPainter(progress),
+                  ),
+                ),
+              ),
+              Positioned(
+                left: boyX,
+                bottom: context.h(2),
+                child: Image.asset(
+                  'assets/gifs/running_boy.gif',
+                  width: gifSize,
+                  height: gifSize,
+                  fit: BoxFit.contain,
+                  gaplessPlayback: true,
+                ),
+              ),
+            ],
+          );
+        },
       ),
     );
   }

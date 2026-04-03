@@ -5,7 +5,9 @@ import 'package:rusk_media_player/features/video_feed/domain/entities/video_enti
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_cubit.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_dev_snackbar.dart';
+import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_feature_hints.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_heart_animation.dart';
+import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_mute_button.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_optimized_video_player.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_overlay_section.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/view/widgets/video_feed_view_play_pause_indicator.dart';
@@ -31,6 +33,30 @@ class VideoFeedViewItem extends StatefulWidget {
 class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
   final _heartKey = GlobalKey<VideoFeedViewHeartAnimationState>();
   final _playPauseKey = GlobalKey<VideoFeedViewPlayPauseIndicatorState>();
+  final _scrubberKey = GlobalKey<VideoFeedViewProgressScrubberState>();
+  bool _showHints = false;
+
+  @override
+  void initState() {
+    super.initState();
+    if (!VideoFeedViewFeatureHints.hasShown) {
+      VideoFeedViewFeatureHints.hasShown = true;
+      _showHints = true;
+      _pauseForHints();
+    }
+  }
+
+  void _pauseForHints() {
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      widget.controller?.pause();
+    });
+  }
+
+  void _onHintsDismissed() {
+    if (!mounted) return;
+    setState(() => _showHints = false);
+    widget.controller?.play();
+  }
 
   bool get _isReady {
     final c = widget.controller;
@@ -38,6 +64,16 @@ class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
         c.value.isInitialized &&
         !c.value.hasError &&
         c.value.duration.inMilliseconds > 0;
+  }
+
+  @override
+  void didUpdateWidget(VideoFeedViewItem oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (_showHints &&
+        widget.controller != oldWidget.controller &&
+        widget.controller != null) {
+      widget.controller!.pause();
+    }
   }
 
   void _toggleLike() {
@@ -72,6 +108,7 @@ class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
       onDoubleTap: _isReady ? () {} : null,
       child: VideoFeedViewVolumeGesture(
         controller: widget.controller,
+        scrubberKey: _scrubberKey,
         child: Stack(
           children: [
             VideoFeedViewOptimizedVideoPlayer(
@@ -100,13 +137,21 @@ class _VideoFeedViewItemState extends State<VideoFeedViewItem> {
                 right: 0,
                 bottom: 0,
                 child: VideoFeedViewProgressScrubber(
+                  key: _scrubberKey,
                   controller: widget.controller,
                 ),
               ),
               VideoFeedViewRetentionPaywall(controller: widget.controller),
               VideoFeedViewHeartAnimation(key: _heartKey),
               VideoFeedViewPlayPauseIndicator(key: _playPauseKey),
+              VideoFeedViewMuteButton(controller: widget.controller),
             ],
+            if (_showHints)
+              Positioned.fill(
+                child: VideoFeedViewFeatureHints(
+                  onDismiss: _onHintsDismissed,
+                ),
+              ),
           ],
         ),
       ),

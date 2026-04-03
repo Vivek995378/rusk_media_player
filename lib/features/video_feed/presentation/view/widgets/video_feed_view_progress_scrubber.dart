@@ -15,10 +15,10 @@ class VideoFeedViewProgressScrubber extends StatefulWidget {
 
   @override
   State<VideoFeedViewProgressScrubber> createState() =>
-      _VideoFeedViewProgressScrubberState();
+      VideoFeedViewProgressScrubberState();
 }
 
-class _VideoFeedViewProgressScrubberState
+class VideoFeedViewProgressScrubberState
     extends State<VideoFeedViewProgressScrubber>
     with SingleTickerProviderStateMixin {
   bool _isScrubbing = false;
@@ -26,6 +26,51 @@ class _VideoFeedViewProgressScrubberState
   double _scrubX = 0;
   late AnimationController _expandController;
   late Animation<double> _expandAnimation;
+
+  void externalSeekStart(double progress) {
+    final ctrl = widget.controller;
+    if (ctrl == null ||
+        !ctrl.value.isInitialized ||
+        ctrl.value.duration.inMilliseconds == 0) {
+      return;
+    }
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    setState(() {
+      _isScrubbing = true;
+      _scrubProgress = progress.clamp(0.0, 1.0);
+      _scrubX = _scrubProgress * box.size.width;
+    });
+    _expandController.forward();
+    ctrl.pause();
+  }
+
+  void externalSeekUpdate(double progress) {
+    if (!_isScrubbing) return;
+    final box = context.findRenderObject() as RenderBox?;
+    if (box == null) return;
+    setState(() {
+      _scrubProgress = progress.clamp(0.0, 1.0);
+      _scrubX = _scrubProgress * box.size.width;
+    });
+    final ctrl = widget.controller;
+    if (ctrl != null && ctrl.value.isInitialized) {
+      final ms = (_scrubProgress * ctrl.value.duration.inMilliseconds).round();
+      ctrl.seekTo(Duration(milliseconds: ms));
+    }
+  }
+
+  void externalSeekEnd({required bool resume}) {
+    if (!_isScrubbing) return;
+    final ctrl = widget.controller;
+    if (ctrl != null && ctrl.value.isInitialized) {
+      final ms = (_scrubProgress * ctrl.value.duration.inMilliseconds).round();
+      ctrl.seekTo(Duration(milliseconds: ms));
+      if (resume) ctrl.play();
+    }
+    _expandController.reverse();
+    setState(() => _isScrubbing = false);
+  }
 
   @override
   void initState() {
@@ -213,6 +258,7 @@ class _TimePreview extends StatelessWidget {
       child: AppText(
         '$current / $total',
         style: AppTextStyle.labelMedium,
+        color: white,
       ),
     );
   }

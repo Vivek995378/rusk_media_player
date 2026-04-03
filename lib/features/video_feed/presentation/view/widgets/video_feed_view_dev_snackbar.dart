@@ -84,7 +84,7 @@ class _DevSnackbarOverlayState extends State<_DevSnackbarOverlay>
   @override
   Widget build(BuildContext context) {
     return Positioned(
-      bottom: context.h(100),
+      bottom: context.h(40),
       left: context.w(24),
       right: context.w(24),
       child: SlideTransition(
