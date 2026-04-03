@@ -1,6 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.INTERNET"/>
     <application
-        android:label="rusk_media_player"
+        android:label="Rusk Media Player"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">
         <activity
