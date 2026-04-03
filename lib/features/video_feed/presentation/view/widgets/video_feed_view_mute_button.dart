@@ -52,14 +52,18 @@ class _VideoFeedViewMuteButtonState extends State<VideoFeedViewMuteButton>
   void didUpdateWidget(VideoFeedViewMuteButton oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
-      oldWidget.controller?.removeListener(_onControllerUpdate);
+      try {
+        oldWidget.controller?.removeListener(_onControllerUpdate);
+      } catch (_) {}
       widget.controller?.addListener(_onControllerUpdate);
     }
   }
 
   @override
   void dispose() {
-    widget.controller?.removeListener(_onControllerUpdate);
+    try {
+      widget.controller?.removeListener(_onControllerUpdate);
+    } catch (_) {}
     _scaleController.dispose();
     super.dispose();
   }
@@ -91,7 +95,10 @@ class _VideoFeedViewMuteButtonState extends State<VideoFeedViewMuteButton>
       right: context.w(16),
       child: GestureDetector(
         onTap: _toggleMute,
-        child: AnimatedBuilder(
+        child: Semantics(
+          label: _isMuted ? 'Unmute' : 'Mute',
+          button: true,
+          child: AnimatedBuilder(
           animation: _scaleAnimation,
           builder: (context, child) {
             return Transform.scale(
@@ -118,6 +125,7 @@ class _VideoFeedViewMuteButtonState extends State<VideoFeedViewMuteButton>
               size: context.sq(18),
             ),
           ),
+        ),
         ),
       ),
     );

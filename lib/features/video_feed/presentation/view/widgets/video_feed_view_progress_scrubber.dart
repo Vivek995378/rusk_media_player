@@ -92,14 +92,18 @@ class VideoFeedViewProgressScrubberState
   void didUpdateWidget(VideoFeedViewProgressScrubber oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
-      oldWidget.controller?.removeListener(_onVideoTick);
+      try {
+        oldWidget.controller?.removeListener(_onVideoTick);
+      } catch (_) {}
       widget.controller?.addListener(_onVideoTick);
     }
   }
 
   @override
   void dispose() {
-    widget.controller?.removeListener(_onVideoTick);
+    try {
+      widget.controller?.removeListener(_onVideoTick);
+    } catch (_) {}
     _expandController.dispose();
     super.dispose();
   }

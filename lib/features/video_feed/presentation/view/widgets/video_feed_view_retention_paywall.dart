@@ -47,7 +47,9 @@ class _VideoFeedViewRetentionPaywallState
   void didUpdateWidget(VideoFeedViewRetentionPaywall oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (oldWidget.controller != widget.controller) {
-      oldWidget.controller?.removeListener(_onTick);
+      try {
+        oldWidget.controller?.removeListener(_onTick);
+      } catch (_) {}
       _triggered = false;
       _dismissed = false;
       if (_entryController.isCompleted || _entryController.isAnimating) {
@@ -59,7 +61,9 @@ class _VideoFeedViewRetentionPaywallState
 
   @override
   void dispose() {
-    widget.controller?.removeListener(_onTick);
+    try {
+      widget.controller?.removeListener(_onTick);
+    } catch (_) {}
     _entryController.dispose();
     super.dispose();
   }

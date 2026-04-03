@@ -4,11 +4,11 @@ class StaticVideoData {
   static final List<VideoEntity> videos = [
     VideoEntity(
       id: 'vid_01',
-      username: 'rahul.vlogs',
-      description: 'Morning ride hits different 🚴‍♂️',
+      username: 'ruskmediaofficial',
+      description: 'Morning ride hits different 🚴‍♂️ #RuskOriginal',
       videoUrl:
-      'https://res.cloudinary.com/dxl93ott6/video/upload/v1775220309/Video-148_iudo9d.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=11',
+          'https://res.cloudinary.com/dxl93ott6/video/upload/v1775223169/Video-148_jmfeym.mp4',
+      profileImageUrl: 'https://i.pravatar.cc/150?img=21',
       likeCount: 1820,
       commentCount: 142,
       shareCount: 96,
@@ -18,11 +18,11 @@ class StaticVideoData {
 
     VideoEntity(
       id: 'vid_02',
-      username: 'ananya.lifestyle',
-      description: 'POV: you finally take a break ✨',
+      username: 'ruskmediafans',
+      description: 'POV: you finally take a break ✨ #FanEdit',
       videoUrl:
-      'https://res.cloudinary.com/dxl93ott6/video/upload/v1775221168/Video-714_wdqytm.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=12',
+          'https://res.cloudinary.com/dxl93ott6/video/upload/v1775223169/Video-995_dqwfmc.mp4',
+      profileImageUrl: 'https://i.pravatar.cc/150?img=22',
       likeCount: 5420,
       commentCount: 389,
       shareCount: 210,
@@ -32,11 +32,11 @@ class StaticVideoData {
 
     VideoEntity(
       id: 'vid_03',
-      username: 'dev.raj',
-      description: 'Late night coding session 💻☕',
+      username: 'ruskmedia.tech',
+      description: 'Late night coding session 💻☕ #CreatorLife',
       videoUrl:
-      'https://res.cloudinary.com/dkvfdusmb/video/upload/v1743853238/videoplayback7_zljhzl.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=13',
+          'https://res.cloudinary.com/dkvfdusmb/video/upload/v1743853238/videoplayback7_zljhzl.mp4',
+      profileImageUrl: 'https://i.pravatar.cc/150?img=23',
       likeCount: 3210,
       commentCount: 275,
       shareCount: 143,
@@ -45,11 +45,11 @@ class StaticVideoData {
 
     VideoEntity(
       id: 'vid_04',
-      username: 'fit.with.aman',
-      description: 'No excuses. Just consistency 💪',
+      username: 'ruskmedia.fitness',
+      description: 'No excuses. Just consistency 💪 #StayFit',
       videoUrl:
-      'https://res.cloudinary.com/dxl93ott6/video/upload/v1775221180/Video-995_dj5axx.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=14',
+          'https://res.cloudinary.com/dxl93ott6/video/upload/v1775223168/Video-732_1_1_1_fdqbot.mp4',
+      profileImageUrl: 'https://i.pravatar.cc/150?img=24',
       likeCount: 8740,
       commentCount: 610,
       shareCount: 355,
@@ -59,11 +59,11 @@ class StaticVideoData {
 
     VideoEntity(
       id: 'vid_05',
-      username: 'travel.with.me',
-      description: 'This view was worth the climb 🏔️',
+      username: 'ruskmedia.travel',
+      description: 'This view was worth the climb 🏔️ #ExploreMore',
       videoUrl:
-      'https://res.cloudinary.com/dxl93ott6/video/upload/v1775221741/Video-903_1_1_zzhtfx.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=15',
+          'https://res.cloudinary.com/dxl93ott6/video/upload/v1775223169/Video-148_jmfeym.mp4',
+      profileImageUrl: 'https://i.pravatar.cc/150?img=25',
       likeCount: 6520,
       commentCount: 420,
       shareCount: 280,
@@ -72,29 +72,16 @@ class StaticVideoData {
 
     VideoEntity(
       id: 'vid_06',
-      username: 'foodie.diaries',
-      description: 'Street food never disappoints 🤤',
+      username: 'ruskmedia.food',
+      description: 'Street food never disappoints 🤤 #FoodReels',
       videoUrl:
-      'https://res.cloudinary.com/dxl93ott6/video/upload/v1775221741/Video-732_1_1_cjnfod.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=16',
+          'https://res.cloudinary.com/dxl93ott6/video/upload/v1775223169/Video-714_1_woh4tl.mp4',
+      profileImageUrl: 'https://i.pravatar.cc/150?img=26',
       likeCount: 4980,
       commentCount: 312,
       shareCount: 190,
       isLiked: true,
       isBookmarked: true,
-      timestamp: DateTime(2026, 4, 3),
-    ),
-
-    VideoEntity(
-      id: 'vid_07',
-      username: 'music.addict',
-      description: 'Headphones on. World off 🎧',
-      videoUrl:
-      'https://res.cloudinary.com/dxl93ott6/video/upload/v1775221751/Video-181_1_1_vdsywy.mp4',
-      profileImageUrl: 'https://i.pravatar.cc/150?img=17',
-      likeCount: 7350,
-      commentCount: 540,
-      shareCount: 320,
       timestamp: DateTime(2026, 4, 3),
     ),
   ];

@@ -1,9 +1,7 @@
-import 'dart:collection';
 import 'dart:io';
 
-import 'package:flutter/foundation.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
-import 'package:flutter_cache_manager/flutter_cache_manager.dart';
+import 'package:rusk_media_player/features/video_feed/data/services/video_preload_service.dart';
 import 'package:rusk_media_player/features/video_feed/domain/usecases/fetch_more_videos_usecase.dart';
 import 'package:rusk_media_player/features/video_feed/domain/usecases/fetch_videos_usecase.dart';
 import 'package:rusk_media_player/features/video_feed/presentation/bloc/video_feed_state.dart';
@@ -12,18 +10,18 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
   VideoFeedCubit({
     required FetchVideosUseCase fetchVideosUseCase,
     required FetchMoreVideosUseCase fetchMoreVideosUseCase,
+    required VideoPreloadService preloadService,
   })  : _fetchVideosUseCase = fetchVideosUseCase,
         _fetchMoreVideosUseCase = fetchMoreVideosUseCase,
+        _preloadService = preloadService,
         super(VideoFeedState.initial()) {
     loadVideos();
   }
 
   final FetchVideosUseCase _fetchVideosUseCase;
   final FetchMoreVideosUseCase _fetchMoreVideosUseCase;
-  final _preloadQueue = Queue<String>();
-  final _preloadedFiles = <String, File>{};
+  final VideoPreloadService _preloadService;
   bool _isPreloadingMore = false;
-  static const _maxPreloadedFiles = 10;
 
   void toggleLike(String videoId) {
     final updated = Set<String>.from(state.likedVideoIds);
@@ -33,6 +31,16 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
       updated.add(videoId);
     }
     emit(state.copyWith(likedVideoIds: updated));
+  }
+
+  void toggleFollow(String username) {
+    final updated = Set<String>.from(state.followedUsernames);
+    if (updated.contains(username)) {
+      updated.remove(username);
+    } else {
+      updated.add(username);
+    }
+    emit(state.copyWith(followedUsernames: updated));
   }
 
   Future<void> loadVideos() async {
@@ -54,7 +62,7 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
             errorMessage: '',
           ),
         );
-        if (videos.isNotEmpty) preloadNextVideos();
+        if (videos.isNotEmpty) _preloadNext();
       },
     );
   }
@@ -76,14 +84,14 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
             errorMessage: '',
           ),
         );
-        preloadNextVideos();
+        _preloadNext();
       },
     );
   }
 
   Future<void> onPageChanged(int newIndex) async {
     emit(state.copyWith(currentIndex: newIndex));
-    await preloadNextVideos();
+    await _preloadNext();
     if (!_isPreloadingMore &&
         state.hasMoreVideos &&
         newIndex >= state.videos.length - 2) {
@@ -93,58 +101,27 @@ class VideoFeedCubit extends Cubit<VideoFeedState> {
     }
   }
 
-  Future<void> preloadNextVideos() async {
+  Future<void> _preloadNext() async {
     if (state.videos.isEmpty) return;
-    final videosToPreload = state.videos
+    final urls = state.videos
         .skip(state.currentIndex + 1)
         .take(2)
         .map((v) => v.videoUrl)
-        .where((url) => !_preloadedFiles.containsKey(url));
-    for (final videoUrl in videosToPreload) {
-      if (!_preloadQueue.contains(videoUrl)) {
-        _preloadQueue.add(videoUrl);
-        await _preloadVideo(videoUrl);
-      }
+        .toList();
+    final newUrls = await _preloadService.preloadUrls(urls);
+    if (newUrls.isNotEmpty) {
+      final updated = Set<String>.from(state.preloadedVideoUrls)
+        ..addAll(newUrls);
+      emit(state.copyWith(preloadedVideoUrls: updated));
     }
   }
 
-  Future<void> _preloadVideo(String videoUrl) async {
-    try {
-      final file = await getCachedVideoFile(videoUrl);
-      _preloadedFiles[videoUrl] = file;
-      _evictOldPreloads();
-      final currentPreloaded = Set<String>.from(state.preloadedVideoUrls)
-        ..add(videoUrl);
-      emit(state.copyWith(preloadedVideoUrls: currentPreloaded));
-    } catch (e) {
-      debugPrint('Error preloading video: $e');
-    } finally {
-      _preloadQueue.remove(videoUrl);
-    }
-  }
-
-  void _evictOldPreloads() {
-    while (_preloadedFiles.length > _maxPreloadedFiles) {
-      final oldest = _preloadedFiles.keys.first;
-      _preloadedFiles.remove(oldest);
-    }
-  }
-
-  Future<File> getCachedVideoFile(String videoUrl) async {
-    if (_preloadedFiles.containsKey(videoUrl)) {
-      return _preloadedFiles[videoUrl]!;
-    }
-    final cacheManager = DefaultCacheManager();
-    final fileInfo = await cacheManager.getFileFromCache(videoUrl);
-    final file = fileInfo?.file ?? await cacheManager.getSingleFile(videoUrl);
-    _preloadedFiles[videoUrl] = file;
-    return file;
-  }
+  Future<File> getCachedVideoFile(String videoUrl) =>
+      _preloadService.getCachedVideoFile(videoUrl);
 
   @override
   Future<void> close() {
-    _preloadQueue.clear();
-    _preloadedFiles.clear();
+    _preloadService.dispose();
     return super.close();
   }
 }

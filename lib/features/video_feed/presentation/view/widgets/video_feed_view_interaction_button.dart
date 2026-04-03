@@ -69,23 +69,26 @@ class _VideoFeedViewInteractionButtonState
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
-      onTap: () {
-        _controller.forward(from: 0);
-        widget.onTap();
-      },
-      child: AnimatedBuilder(
-        animation: _scaleAnimation,
-        builder: (context, child) {
-          return Transform.scale(
-            scale: _scaleAnimation.value,
-            child: child,
-          );
+    return Semantics(
+      button: true,
+      child: GestureDetector(
+        onTap: () {
+          _controller.forward(from: 0);
+          widget.onTap();
         },
-        child: Icon(
-          widget.icon,
-          color: widget.color,
-          size: context.sq(AppSizes.interactionIconSize),
+        child: AnimatedBuilder(
+          animation: _scaleAnimation,
+          builder: (context, child) {
+            return Transform.scale(
+              scale: _scaleAnimation.value,
+              child: child,
+            );
+          },
+          child: Icon(
+            widget.icon,
+            color: widget.color,
+            size: context.sq(AppSizes.interactionIconSize),
+          ),
         ),
       ),
     );

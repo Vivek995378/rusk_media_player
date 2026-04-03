@@ -35,7 +35,7 @@ class VideoFeedViewUserHeader extends StatelessWidget {
           style: AppTextStyle.titleLarge,
           color: MENeutralColors.neutral0,
         ),
-        const VideoFeedViewFollowButton(),
+        VideoFeedViewFollowButton(username: username),
       ],
     );
   }

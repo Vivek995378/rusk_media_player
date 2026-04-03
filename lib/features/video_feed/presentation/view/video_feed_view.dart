@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:preload_page_view/preload_page_view.dart';
@@ -129,24 +131,32 @@ class _VideoFeedViewState extends State<VideoFeedView>
 
   Future<void> _handlePageChange(int newPage) async {
     if (_videos.isEmpty || newPage >= _videos.length) return;
+
+    if (newPage == _currentPage && _currentPage != 0) return;
+
     final previousPage = _currentPage;
     _currentPage = newPage;
     final isFastScroll = (newPage - previousPage).abs() > 1;
-    await _controllerManager.pauseAll();
+
+    _controllerManager.pauseAll();
+
     try {
       if (isFastScroll) {
         final videoId = _videos[newPage].id;
         for (final id in _controllerManager.cachedIds
             .where((id) => id != videoId)
             .toList()) {
-          await _controllerManager.remove(id);
+          unawaited(_controllerManager.remove(id));
         }
       }
-      await _manageControllerWindow(newPage);
-      if (_videos.isNotEmpty && newPage < _videos.length) {
-        await _initAndPlayVideo(newPage);
+
+      await _initAndPlayVideo(newPage);
+
+      unawaited(_manageControllerWindow(newPage));
+
+      if (mounted) {
+        unawaited(context.read<VideoFeedCubit>().onPageChanged(newPage));
       }
-      if (mounted) await context.read<VideoFeedCubit>().onPageChanged(newPage);
     } catch (e) {
       debugPrint('Error handling page change: $e');
     }
@@ -168,6 +178,7 @@ class _VideoFeedViewState extends State<VideoFeedView>
           scrollDirection: Axis.vertical,
           controller: _pageController,
           itemCount: _videos.length,
+          preloadPagesCount: 1,
           physics: const VideoFeedViewSnapPhysics(),
           onPageChanged: _handlePageChange,
           itemBuilder: (context, index) {

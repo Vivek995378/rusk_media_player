@@ -254,7 +254,8 @@ class _PremiumParticlePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _PremiumParticlePainter old) =>
+      old.progress != progress;
 }
 
 class LoadingBarWithRunner extends StatefulWidget {
@@ -363,5 +364,6 @@ class _LoadingBarPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => true;
+  bool shouldRepaint(covariant _LoadingBarPainter old) =>
+      old.progress != progress;
 }

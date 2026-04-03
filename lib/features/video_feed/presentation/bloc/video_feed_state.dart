@@ -12,6 +12,7 @@ class VideoFeedState extends Equatable {
     this.currentIndex = 0,
     this.preloadedVideoUrls = const {},
     this.likedVideoIds = const {},
+    this.followedUsernames = const {},
   });
 
   factory VideoFeedState.initial() => const VideoFeedState();
@@ -25,15 +26,19 @@ class VideoFeedState extends Equatable {
   final int currentIndex;
   final Set<String> preloadedVideoUrls;
   final Set<String> likedVideoIds;
+  final Set<String> followedUsernames;
 
   @override
   List<Object?> get props => [
         isLoading, isSuccess, isPaginating, hasMoreVideos,
         errorMessage, videos, currentIndex, preloadedVideoUrls,
-        likedVideoIds,
+        likedVideoIds, followedUsernames,
       ];
 
   bool isVideoLiked(String videoId) => likedVideoIds.contains(videoId);
+
+  bool isUserFollowed(String username) =>
+      followedUsernames.contains(username);
 
   VideoFeedState copyWith({
     bool? isLoading,
@@ -45,6 +50,7 @@ class VideoFeedState extends Equatable {
     int? currentIndex,
     Set<String>? preloadedVideoUrls,
     Set<String>? likedVideoIds,
+    Set<String>? followedUsernames,
   }) {
     return VideoFeedState(
       isLoading: isLoading ?? this.isLoading,
@@ -56,6 +62,7 @@ class VideoFeedState extends Equatable {
       currentIndex: currentIndex ?? this.currentIndex,
       preloadedVideoUrls: preloadedVideoUrls ?? this.preloadedVideoUrls,
       likedVideoIds: likedVideoIds ?? this.likedVideoIds,
+      followedUsernames: followedUsernames ?? this.followedUsernames,
     );
   }
 }

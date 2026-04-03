@@ -35,13 +35,19 @@ class _VideoFeedViewOptimizedVideoPlayerState
   }
 
   void _addControllerListener() {
-    if (widget.controller != null) {
-      _isBuffering =
-          widget.controller!.value.isBuffering;
-      _isPlaying =
-          widget.controller!.value.isPlaying;
-      widget.controller!
-          .addListener(_onControllerUpdate);
+    final controller = widget.controller;
+    if (controller == null) return;
+
+    try {
+      if (!controller.value.isInitialized &&
+          controller.value.duration == Duration.zero) {
+        return;
+      }
+      _isBuffering = controller.value.isBuffering;
+      _isPlaying = controller.value.isPlaying;
+      controller.addListener(_onControllerUpdate);
+    } catch (e) {
+      debugPrint('Controller listener skip: $e');
     }
   }
 
